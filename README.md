@@ -10,7 +10,11 @@
 - `art/`：第二章用的美術素材（three.js 程式畫的，還沒接進任何遊戲）
   - `halloween.mjs`：南瓜燈（四種雕臉、燭光閃）、典禮廳整套萬聖布置
   - `ch2props.mjs`：醫務室病床、舊檔案室檔案櫃、黑色布幔、諾克斯的點名簿、溫室的黑色植物
+  - `ch2rooms.mjs`（2026-11-04）：大釜（冒泡、可換顏色）、黑板（粉筆字／被擦掉的配方）、材料架、南瓜汁壺（被下藥的有黑油膜）與高腳杯、酒桶、溫室灑水器（四組）、學院徽記台（會亮）、大門與正在關上的結界
   - `erode.mjs`：蝕化效果（任何角色都能套：血管紋、膚色變灰、眼睛全黑）。蝕化諾克斯的「裂嘴」還沒做好
 
 ## 還沒決定
 - 第二章要不要沿用第一章的遊戲程式（場景、多人、伺服器判斷答案、謎題系統）當底，等劇情確認後再說。
+
+## 本機預覽美術
+`preview/props.html?show=cauldron`（cauldron、blackboard、shelf、juice、barrel、sprinkler、crest、gate）。three.js 用第一章儲存庫的 `prototype/vendor/three.module.min.js`；用 Playwright 直接從硬碟讀檔案截圖，不用開伺服器。

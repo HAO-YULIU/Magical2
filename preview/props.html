@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8"><title>第二章擺設預覽</title>
+<style>html,body{margin:0;background:#111;color:#ddd;font:14px sans-serif;overflow:hidden}#cap{position:fixed;left:10px;top:8px}</style>
+<script type="importmap">{ "imports": { "three": "/Kooomp/prototype/vendor/three.module.min.js" } }</script></head>
+<body><div id="cap"></div><script type="module">
+// 本機預覽（帳號二）：在 /home/user 開 http server，打開 /magical2/preview/props.html?show=名字
+import * as THREE from 'three';
+import * as R from '../art/ch2rooms.mjs';
+const show = new URLSearchParams(location.search).get('show') || 'all';
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(innerWidth, innerHeight); r.outputColorSpace = THREE.SRGBColorSpace; document.body.append(r.domElement);
+const sc = new THREE.Scene(); sc.background = new THREE.Color('#141218');
+sc.add(new THREE.HemisphereLight('#b8b0c8', '#2a2420', 1.1)); const d = new THREE.DirectionalLight('#ffe8c8', 1.6); d.position.set(3, 6, 5); sc.add(d);
+const fl = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: '#2a2622', roughness: 1 })); fl.rotation.x = -Math.PI / 2; sc.add(fl);
+const cam = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.05, 100);
+const items = {
+  cauldron: [() => R.cauldron(), [0, 1.4, 2.2], [0, 0.7, 0]],
+  blackboard: [() => { const g = new THREE.Group(); const a = R.blackboard(); a.position.x = -1.7; const b = R.blackboard({ lines: ['把＿＿＿放進去，', '在＿＿＿的時候，', '念＿＿＿。'], erased: true }); b.position.x = 1.7; g.add(a, b); return g; }, [0, 1.6, 4.5], [0, 1.5, 0]],
+  shelf: [() => R.ingredientShelf(), [0, 1.2, 2.6], [0, 1.0, 0]],
+  juice: [() => { const g = new THREE.Group(); const a = R.juiceJug(); a.position.x = -0.15; const b = R.juiceJug({ drugged: true }); b.position.x = 0.15; const c = R.gobletSet(4); c.position.set(-0.5, 0, 0.25); g.add(a, b, c); return g; }, [0, 0.45, 1.0], [0, 0.12, 0]],
+  barrel: [() => { const g = new THREE.Group(); const a = R.barrel(); a.position.x = -0.6; const b = R.barrel({ lying: true }); b.position.set(0.1, 0, 0.3); g.add(a, b); return g; }, [0, 1.3, 3], [0, 0.5, 0]],
+  sprinkler: [() => { const g = R.sprinklerRig(); [0, 2].forEach((i) => g.userData.spray(i, true)); return g; }, [6, 2.5, 0], [0, 2, 0]],
+  crest: [() => { const g = new THREE.Group(); ['eldrin', 'grimoire', 'belmont', 'ouroboros'].forEach((h, i) => { const p = R.crestPedestal(h); p.position.x = -3 + i * 2; if (i % 2 === 0) p.userData.light(true); g.add(p); }); return g; }, [0, 3, 8], [0, 1.5, 0]],
+  gate: [() => R.gateBarrier(), [0, 3.5, 12], [0, 3.2, 0]],
+};
+const keys = show === 'all' ? Object.keys(items) : [show];
+const [make, eye, at] = items[keys[0]]; const obj = make(); sc.add(obj);
+cam.position.set(...eye); cam.lookAt(...at); document.getElementById('cap').textContent = keys[0];
+let last = performance.now();
+(function loop(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; obj.userData.tick?.(dt); obj.traverse((o) => o.userData.tick?.(dt)); r.render(sc, cam); requestAnimationFrame(loop); })(last);
+window.__ready = true;
+</script></body></html>
