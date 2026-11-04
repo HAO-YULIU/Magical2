@@ -13,8 +13,14 @@
   - `ch2rooms.mjs`（2026-11-04）：大釜（冒泡、可換顏色）、黑板（粉筆字／被擦掉的配方）、材料架、南瓜汁壺（被下藥的有黑油膜）與高腳杯、酒桶、溫室灑水器（四組）、學院徽記台（會亮）、大門與正在關上的結界
   - `erode.mjs`：蝕化效果（任何角色都能套：血管紋、膚色變灰、眼睛全黑）。蝕化諾克斯的「裂嘴」還沒做好
 
+## 遊戲程式（2026-11-04）
+- 製作人確認：**複製第一章的程式當底**（`game/`、`server/`、`data/`、`tools/`、`assets/`、`prototype/`）。目前內容還是第一章的，本機可以從頭玩到結局；之後一段一段換成第二章。說明見 `CLAUDE.md`。
+- Worker 名稱 `magical2`，還沒部署。
+
 ## 還沒決定
-- 第二章要不要沿用第一章的遊戲程式（場景、多人、伺服器判斷答案、謎題系統）當底，等劇情確認後再說。
+- 整份劇情、地圖（27 題）、謎題細節是否確定。
+- 新場景想用的模型。
+- 第二章什麼時候第一次部署（網址）。
 
 ## 本機預覽美術
 `preview/props.html?show=cauldron`（cauldron、blackboard、shelf、juice、barrel、sprinkler、crest、gate）。three.js 用第一章儲存庫的 `prototype/vendor/three.module.min.js`；用 Playwright 直接從硬碟讀檔案截圖，不用開伺服器。
