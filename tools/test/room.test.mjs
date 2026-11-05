@@ -115,34 +115,30 @@ test('多人：加入、選角色、準備、開始、同步、聊天、作答',
   a.send({ t: 'mark', kind: 'danger', z: 'library', p: [1, 1] });
   assert.equal((await b.wait((m) => m.t === 'mark')).kind, 'danger');
 
-  // 段落：序幕還不能答第一幕的題目；解開 P02 進入第一幕
-  assert.equal((await a.request({ t: 'answer', pid: 'P05', value: '9' })).error, 'not_yet');
-  assert.equal((await a.request({ t: 'answer', pid: 'P02', value: ['北翼', '綠燈', '十三'] })).solved, true);
+  // 段落（第二章）：序幕還不能答第一幕的題目；解開 Q01、Q02 進入第一幕
+  assert.equal((await a.request({ t: 'answer', pid: 'Q05', value: 'moonwort,batwing,silver' })).error, 'not_yet');
+  assert.equal((await a.request({ t: 'answer', pid: 'Q01', value: '3104' })).solved, true);
+  assert.equal((await a.request({ t: 'answer', pid: 'Q02', value: 'tri,stitch' })).solved, true);
   s = await b.wait((m) => m.t === 'state' && m.segment === 'act1');
   assert.deepEqual(s.ai.sort(), ['grimoire', 'ouroboros']); // 沒人選的月晞、西里爾由電腦控制
 
-  // 作答：學院限定、答錯冷卻、答對全隊都知道
-  assert.equal((await a.request({ t: 'answer', pid: 'P03', value: 'scorpio' })).error, 'not_your_house'); // 沃恩是貝爾蒙特
-  assert.equal((await b.request({ t: 'answer', pid: 'P03', value: 'leo' })).solved, false);
-  assert.equal((await b.request({ t: 'answer', pid: 'P03', value: 'scorpio' })).error, 'cooldown');
-  const right = await a.request({ t: 'answer', pid: 'P05', value: '9' });
+  // 作答：答錯冷卻、答對全隊都知道
+  assert.equal((await b.request({ t: 'answer', pid: 'Q03', value: 'serpent,shriek,mandrake' })).solved, false);
+  assert.equal((await b.request({ t: 'answer', pid: 'Q03', value: 'mandrake,shriek,serpent' })).error, 'cooldown');
+  const right = await a.request({ t: 'answer', pid: 'Q05', value: 'moonwort,batwing,silver' });
   assert.equal(right.solved, true);
-  assert.equal(right.reveal, '9'); // 時辰只告訴作答者
-  const seen = await b.wait((m) => m.t === 'solved' && m.pid === 'P05');
-  assert.equal(seen.reveal, undefined);
+  assert.equal((await b.wait((m) => m.t === 'solved' && m.pid === 'Q05')).by, a.uid);
 
-  // P07：電腦控制的同伴用燭光傳時辰（只有他們的塔）
-  const peek7 = await b.request({ t: 'peek', pid: 'P07' });
-  assert.deepEqual(Object.keys(peek7.content.morse).sort(), ['grimoire', 'ouroboros']);
-  assert.deepEqual(peek7.content.morse.grimoire, ['.----', '.----']); // 11
-  assert.equal((await b.request({ t: 'answer', pid: 'P07', value: { grimoire: 11, ouroboros: 3 } })).solved, true);
-
-  // P08：要全隊都在星盤廳
-  assert.equal((await a.request({ t: 'answer', pid: 'P08', value: 'x' })).error, 'gather_first');
-  a.send({ t: 'pos', z: 'starhall', p: [0, 0], v: [0, 0], y: 0, s: 0 });
-  b.send({ t: 'pos', z: 'starhall', p: [1, 0], v: [0, 0], y: 0, s: 0 });
-  await a.wait((m) => m.t === 'zone' && m.uid === b.uid && m.z === 'starhall');
-  assert.equal((await a.request({ t: 'answer', pid: 'P08', value: 'grimoire:11,ouroboros:3,belmont:9,eldrin:8' })).solved, true);
+  // Q04：空白紅圈是房間裡某個玩家角色的學院（沃恩＝貝爾蒙特、艾洛拉＝艾爾德林）；答案是他的座號
+  const pk4 = await b.request({ t: 'peek', pid: 'Q04' });
+  assert.ok(['belmont', 'eldrin'].includes(pk4.content.house));
+  assert.equal((await a.request({ t: 'answer', pid: 'Q04', value: pk4.content.house === 'belmont' ? '03' : '07' })).solved, true);
+  // Q06：溫室裡三個不對勁的地方
+  const pk6 = await a.request({ t: 'peek', pid: 'Q06' });
+  assert.equal(pk6.content.spots.length, 3);
+  assert.equal((await a.request({ t: 'answer', pid: 'Q06', value: pk6.content.spots })).solved, true);
+  await sleep(3100);
+  for (const [pid, v] of [['Q03', 'mandrake,shriek,serpent'], ['Q07', 'done'], ['Q08', 'blackroot,thirteen,hername'], ['Q09', '836']]) assert.equal((await b.request({ t: 'answer', pid, value: v })).solved, true, pid);
   assert.equal((await b.wait((m) => m.t === 'state' && m.segment === 'act2')).segment, 'act2');
 
   // 第二幕：異常長廊——誰做決定都算，結果告訴全隊；連續對 8 趟才過；再解開 P10 進到第三幕
@@ -166,7 +162,7 @@ test('多人：加入、選角色、準備、開始、同步、聊天、作答',
   assert.equal((await a.request({ t: 'answer', pid: 'P30', value: 'liana' })).solved, true); // 閃電中的她：大小寫都可以
   assert.equal((await a.request({ t: 'answer', pid: 'P10', value: 'NW|1626' })).solved, true);
   assert.equal((await b.wait((m) => m.t === 'state' && m.segment === 'act3a')).segment, 'act3a');
-  assert.equal((await b.request({ t: 'answer', pid: 'P05', value: '9' })).error, 'already_solved');
+  assert.equal((await b.request({ t: 'answer', pid: 'Q05', value: 'moonwort,batwing,silver' })).error, 'already_solved');
 
   // 提示：全隊都看得到，最多三張
   const h = await a.request({ t: 'hint', pid: 'P11' });
@@ -192,16 +188,14 @@ test('單人：只能一個人，英文謎題', async () => {
   const info = await (await fetch(`${base}/api/rooms/${code}`)).json();
   assert.equal(info.max, 1);
   assert.equal((await p.request({ t: 'answer', pid: 'P14', value: 'THE BELL LIES IN THE WELL' })).solved, true);
-  assert.equal((await p.request({ t: 'answer', pid: 'P03', value: 'scorpio' })).solved, true); // 單人不限學院
-  assert.equal((await p.request({ t: 'answer', pid: 'P07', value: { eldrin: 8, belmont: 9, ouroboros: 3 } })).solved, true);
   const peek = await p.request({ t: 'peek', pid: 'P09' });
   assert.equal(peek.loop, 0); assert.equal(peek.next, null);
   // P15 錄音的字幕：轉盤調對（反轉＋0.5 倍）才給；調錯沒有
   assert.equal((await p.request({ t: 'peek', pid: 'P15', value: { rev: true, speed: 0.5 } })).content.lines.length, 5);
   assert.equal((await p.request({ t: 'peek', pid: 'P15', value: { rev: false, speed: 0.5 } })).content.lines, null);
-  // 重新連線（舊連線會被關掉）會拿回自己知道的時辰
+  // 重新連線（舊連線會被關掉）會回到同一段
   const again = await player(code, 'Solo');
-  assert.equal((await again.wait((m) => m.t === 'notes')).notes.P03, '8');
+  assert.equal((await again.wait((m) => m.t === 'state')).segment, 'act3a');
   again.close();
 });
 
@@ -393,17 +387,15 @@ test('整章：單人從序幕玩到尾聲，存檔記下結果，可以回來�
   const ans = async (pid, value) => { const r = await p.request({ t: 'answer', pid, value }); assert.equal(r.solved, true, `${pid} ${JSON.stringify(r)}`); return r; };
   const seg = (s) => p.wait((m) => m.t === 'state' && m.segment === s, 5000);
   // 序幕、第一幕
-  await ans('P02', ['北翼', '綠燈', '十三']); await seg('act1');
+  await ans('Q01', '3104'); await ans('Q02', 'tri,stitch'); await seg('act1');
   await sleep(200);
   const me = await (await fetch(`${base}/api/me`, { headers: auth })).json();
   assert.equal(me.last.code, code, JSON.stringify(me)); assert.equal(me.last.segment, 'act1'); // 中途離開可以從這裡繼續
   assert.equal((await (await fetch(`${base}/api/rooms/${code}`, { headers: auth })).json()).member, true);
   assert.equal((await (await fetch(`${base}/api/rooms/${code}`)).json()).member, false);
-  for (const [pid, v] of [['P03', 'scorpio'], ['P04', '11'], ['P05', '9']]) await ans(pid, v);
-  await ans('P06', [{ t: 0, a: 'flip', g: [7, 11] }, { t: 7, a: 'flip', g: [7] }, { t: 11, a: 'flip', g: [7] }, { t: 15, a: 'knock' }]);
-  await ans('P07', { eldrin: 8, belmont: 9, ouroboros: 3 });
-  p.send({ t: 'pos', z: 'starhall', p: [0, 0], v: [0, 0], y: 0, s: 0 }); await sleep(100);
-  await ans('P08', 'grimoire:11,ouroboros:3,belmont:9,eldrin:8'); await seg('act2');
+  for (const [pid, v] of [['Q03', 'mandrake,shriek,serpent'], ['Q05', 'moonwort,batwing,silver'], ['Q07', 'done'], ['Q08', 'blackroot,thirteen,hername'], ['Q09', '836']]) await ans(pid, v);
+  await ans('Q04', (await p.request({ t: 'peek', pid: 'Q04' })).content.house === 'grimoire' ? '12' : 'x');
+  await ans('Q06', (await p.request({ t: 'peek', pid: 'Q06' })).content.spots); await seg('act2');
   // 第二幕：長廊（有異常就回頭）
   for (let i = 0; i < 40; i++) {
     const pk = await p.request({ t: 'peek', pid: 'P09' });

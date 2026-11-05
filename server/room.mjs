@@ -8,6 +8,8 @@
 import { DurableObject } from 'cloudflare:workers';
 import { PUZZLES, HOUSES, judge, hint, rescueContent, corridorLoop, corridorFocus, morseHours, bookPage, brailleDoor, rng, cryingDoll } from './judge.mjs';
 import { ACT4 } from '../data/puzzles/ch1.mjs';
+import { CH2_GATES, CH2_SEG_END, GREEN_SPOT_NAMES } from '../data/puzzles/ch2.mjs';
+import { circledChar, greenSpots } from './judge.mjs';
 
 export const CHARS = { yuexi: 'grimoire', vaughn: 'belmont', elora: 'eldrin', cyril: 'ouroboros' };
 const MARKS = ['here', 'danger', 'help'];
@@ -15,11 +17,12 @@ const MAX = { solo: 1, multi: 4 };
 const WRONG_COOLDOWN = 3000; // 答錯後同一題要等多久（毫秒）
 // 第一章的段落（docs/07-system.md 第 5 節）。解開「結尾題」就進到下一段
 export const SEGMENTS = ['prologue', 'act1', 'act2', 'act3a', 'act3b', 'act3c', 'act4', 'epilogue'];
-const SEG_END = { P02: 'act1', P08: 'act2', P10: 'act3a', P29: 'epilogue' };
+const SEG_END = { ...CH2_SEG_END, P10: 'act3a', P29: 'epilogue' }; // 第二章：序幕、第一幕換成第二章的（ch2.mjs）
 const ACT4_PUZZLES = ['P26', 'P27', 'P28', 'P29', 'P32'];
 const RESCUE_IDS = ['R1', 'R2', 'R3', 'R4'], SELF_IDS = ['S1', 'S2', 'S3', 'S4'];
 // 第三幕：這一段的題目全部解開，才進到下一段（P22 是西里爾的抉擇，不算）
 const SEG_GATES = {
+  ...CH2_GATES,
   act3a: { need: ['P11', 'P12', 'P13', 'P14'], next: 'act3b' },
   act3b: { need: ['P15', 'P16', 'P17', 'P31'], next: 'act3c' },
   act3c: { need: ['P18', 'P19', 'P20', 'P21', 'P23', 'P24', 'P25'], next: 'act4' },
@@ -301,7 +304,7 @@ export class Room extends DurableObject {
           state.votes = null; // 決定了：照多數的選擇判斷
         }
         const res = devSolve ? { solved: true, reveal: def.reveal ?? (def.kind === 'hourglass' ? def.ans : undefined) } : judge(pid, msg.value, {
-          seed: r.seed, lang: r.lang, house: CHARS[me.char], solo: r.mode === 'solo', aiHouses: this.aiHouses(), state, key: state.key ?? pid, uid,
+          seed: r.seed, lang: r.lang, house: CHARS[me.char], solo: r.mode === 'solo', aiHouses: this.aiHouses(), state, key: state.key ?? pid, uid, chars: r.order.map((u) => r.members[u].char).filter(Boolean),
         });
         if (res.error) { await this.save(); return reply({ t: 'error', error: res.error, ...(res.reply ? { reply: res.reply } : {}) }); }
         // 異常長廊：全隊同一條長廊，誰做決定都算；結果告訴所有人（大家一起被送回長廊起點）
@@ -338,6 +341,8 @@ export class Room extends DurableObject {
         if (!def) return err('bad_puzzle');
         const st = (r.puz[pid] ??= {});
         if (def.kind === 'hours') return reply({ t: 'peek', pid, content: { morse: morseHours(this.aiHouses()) } });
+        if (def.kind === 'rollcircle') { const c = circledChar(r.seed, r.order.map((u) => r.members[u].char).filter(Boolean)); return reply({ t: 'peek', pid, content: { house: CHARS[c] } }); } // Q04：空白紅圈的學院顏色
+        if (def.kind === 'spots') return reply({ t: 'peek', pid, content: { spots: greenSpots(r.seed) } }); // Q06：哪三個地方要畫成不對勁
         if (pid === 'P14') { const b = Math.trunc(+msg.value?.book), p = Math.trunc(+msg.value?.page); if (!(b >= 1 && b <= 12 && p >= 1 && p <= 120)) return err('bad_value'); return reply({ t: 'peek', pid, content: { words: bookPage(r.seed, r.lang, b, p) } }); }
         if (pid === 'P12') { if (!r.items?.lantern) return err('need_item'); return reply({ t: 'peek', pid, content: { shadows: def.ans.split(',') } }); } // 站在標記上舉燈才看得到影子
         if (def.kind === 'doll') return reply({ t: 'peek', pid, content: { doll: cryingDoll(r.seed, st.round ?? 0, def.count) } }); // 哪一個在哭（聲音從那裡傳出來）
@@ -399,7 +404,8 @@ export class Room extends DurableObject {
         if (n >= 3) return err('no_more_hints');
         let focus;
         if (PUZZLES[pid].kind === 'corridor') { const st = r.puz[pid] ?? {}; focus = corridorFocus(corridorLoop(r.seed, st.attempt ?? 0, st.n ?? 0, { rate: PUZZLES[pid].rate, skip: r.mode === 'solo' ? [] : this.aiHouses() }), r.lang); }
-        const text = hint(pid, n, r.lang, { focus });
+        const spot = pid === 'Q06' ? GREEN_SPOT_NAMES[greenSpots(r.seed)[0]]?.[r.lang === 'en' ? 'en' : 'zh'] : undefined;
+        const text = hint(pid, n, r.lang, { focus, spot });
         (r.hints[pid] ??= []).push(text);
         await this.save();
         this.broadcast({ t: 'hint', pid, n, text, by: uid }, (u) => u !== uid);
