@@ -122,7 +122,7 @@ export function createWorld(canvas, lang = 'zh') {
   const lamp = new THREE.PointLight('#ffd9a0', 2.2, 7, 1.8); lamp.position.set(0.3, -0.2, -0.3); camera.add(lamp);
 
   // 赫爾嘉夫人
-  const helga = makeAvatar(lang === 'en' ? 'Madam Helga' : '赫爾嘉夫人', null, { robe: '#3b2a3d', model: 'helga' });
+  const helga = makeAvatar(lang === 'en' ? 'Professor Knox' : '諾克斯教授', null, { robe: '#1e2a24', model: 'helga' }); // 第二章：第一幕巡邏的是諾克斯教授（暫時用赫爾嘉夫人的模型、換深綠色袍子）
   const cone = new THREE.SpotLight('#ffcf70', 40, PATROL.view, THREE.MathUtils.degToRad(PATROL.fov / 2), 0.4, 1.4);
   cone.position.set(0, 1.3, -0.3); cone.target.position.set(0, 0, -4); helga.add(cone, cone.target);
   // 地上淡淡的光：跟「被照到就被抓」的範圍一樣大（2026-10-31：只有被燈照到才會被抓，玩家要看得出哪裡危險）

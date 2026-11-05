@@ -10,6 +10,7 @@ export const SPEAKERS = {
   aldric: { zh: '校長 奧德里克', en: 'Headmaster Aldric' },
   moray: { zh: '副校長 莫瑞', en: 'Vice-Principal Moray' },
   knox: { zh: '諾克斯教授', en: 'Professor Knox' },
+  owen: { zh: '校醫 歐文', en: 'Matron Owen' },
   helga: { zh: '赫爾嘉夫人', en: 'Madam Helga' },
   mirror: { zh: '分院鏡', en: 'The Sorting Mirror' },
   student: { zh: '學生', en: 'A student' },
@@ -17,20 +18,29 @@ export const SPEAKERS = {
 };
 
 export const SCRIPT = {
+  // ===== 第二章《萬聖夜》（2026-11-05）：序幕、第一幕 =====
   'segment:prologue': [
-    [null, '傍晚。渡船穿過黑湖的霧，米爾納學校的燈火在對岸亮起。', 'Dusk. The ferry cuts through the mist on the Black Lake; the lights of Milner Academy rise on the far shore.'],
-    ['vaughn', '看到沒？那就是鐘塔！聽說它四百年來一次都沒停過。', 'See that? The clock tower! They say it hasn’t stopped once in four hundred years.'],
-    ['cyril', '一座會走的鐘，真了不起。你明天要不要也去崇拜一下水壺？', 'A clock that works. Astonishing. Shall we go worship a kettle tomorrow?'],
-    ['yuexi', '……', '…'],
-    ['elora', '別理他們。來，喝點水，暈船的時候看遠一點會比較好。', 'Ignore them. Here, have some water — it helps to look far away when you’re seasick.'],
-    [null, '（WASD／搖桿移動，滑鼠／右半邊畫面轉視角，E／「探查」查看東西。往大廳走。）', '(Move with WASD / the stick, look with the mouse / right side of the screen, E / “Inspect” to examine things. Head for the hall.)'],
+    [null, '十月三十日的晚上。開學已經兩個月了。', 'The night of the thirtieth of October. Two months since term began.'],
+    [null, '四個人都沒有再提起那一晚。但每個人都睡不好。', 'None of the four has spoken of that night since. None of them sleeps well.'],
+    [null, '交誼廳的古鏡忽然起了一層霧。霧上，有人用手指寫了幾個字——是反的。', 'The old mirror in the common room suddenly mists over. Someone has written in the fog with a finger — backwards.'],
+    [null, '（走到鏡子前面按 E／「探查」。看清楚鏡子上的字，打開鏡子下方的暗格。）', '(Walk up to the mirror and press E / “Inspect”. Read the writing, then open the hidden drawer beneath it.)'],
+  ],
+  'solved:Q01': [
+    [null, '暗格打開了。裡面是一張黑色的萬聖晚宴邀請函，背面寫著：「這次，輪到你們點名了。」', 'The drawer opens. Inside is a black invitation to the Halloween Feast. On the back: “This time, it is your turn to call the roll.”'],
+    [null, '傳聲海螺亮了起來——其他人也收到了。四個人約在大廳見。', 'The speaking-shell lights up — the others got one too. The four agree to meet in the Great Hall.'],
+    [null, '（走到交誼廳的門口，下樓到大廳。）', '(Go to the common-room door and head down to the Great Hall.)'],
   ],
   'enter:hall': [
-    [null, '大廳中央立著分院鏡。新生們一個一個站到它面前。', 'The Sorting Mirror stands in the middle of the hall. One by one, the first-years step before it.'],
-    ['mirror', '……下一位。', '…Next.'],
-    [null, '輪到艾洛拉時，鏡子沉默了很久。', 'When Elora’s turn comes, the mirror is silent for a long time.'],
-    ['mirror', '你身上……有別的東西。……艾爾德林。', 'There is… something else in you. …Eldrin.'],
-    [null, '全場安靜了一秒。艾洛拉笑了笑，拉了拉手套，走回大家身邊。', 'The hall goes quiet for a heartbeat. Elora smiles, tugs at her gloves, and walks back to the others.'],
+    [null, '大廳掛滿了南瓜燈，鐘塔外面纏著黑色的布幔。明天就是萬聖夜。', 'The Great Hall is hung with jack-o’-lanterns; black drapes coil around the clock tower outside. Tomorrow is Halloween.'],
+    ['vaughn', '欸，你們也收到了？「輪到你們點名」是什麼意思？', 'You got one too? “Your turn to call the roll” — what’s that supposed to mean?'],
+    ['cyril', '意思是有人在惡作劇，而且品味很差。', 'It means someone is playing a prank, and has terrible taste.'],
+    ['yuexi', '……公告欄前面那排南瓜燈，中間那顆被打爛了。', '…The middle lantern in that rack by the notice board has been smashed.'],
+    ['elora', '其他的臉好像排得很整齊。把它補回去看看？', 'The other faces look carefully arranged. Shall we carve the missing one?'],
+  ],
+  'solved:Q02': [
+    [null, '九顆南瓜燈同時亮了起來。公告欄後面掉出一張泛黃的紙——莉安娜的筆記。', 'All nine lanterns flare at once. A yellowed page drops from behind the notice board — one of Liana’s notes.'],
+    ['elora', '……是姊姊的字。', '…That’s my sister’s handwriting.'],
+    [null, '筆記上只有一句話：「諾克斯教授知道。去魔藥學教室。」', 'There is a single line: “Professor Knox knows. Go to the potions classroom.”'],
   ],
   'enter:banquet': [
     ['aldric', '歡迎來到米爾納。在這裡，你們會學到魔法，也會學到規矩。', 'Welcome to Milner. Here you will learn magic — and you will learn the rules.'],
@@ -40,30 +50,34 @@ export const SCRIPT = {
     [null, '（四張長桌上的學生在交頭接耳。走過去聽聽看，再回到你的座位整理。）', '(Students are whispering at the four long tables. Go and listen, then return to your seat to piece it together.)'],
   ],
   'segment:act1': [
-    [null, '熄燈之後。宿舍很安靜，只有壁爐偶爾劈啪作響。', 'After lights-out. The dormitories are silent but for the crackle of the fire.'],
-    [null, '床頭的傳聲海螺忽然亮了。', 'The speaking-shell by your bed begins to glow.'],
-    ['elora', '……大家還醒著嗎？今天晚宴上有人說，去年那個學姊是在北翼不見的。', '…Is everyone still awake? Someone at dinner said that girl last year vanished in the North Wing.'],
-    ['vaughn', '北翼？那還等什麼，我們去看看！', 'The North Wing? What are we waiting for — let’s go see!'],
-    ['cyril', '無聊。……不過我剛好睡不著。', 'Boring. …Though I happen to be wide awake.'],
-    ['yuexi', '聽說禁區裡有很老的書。我也去。', 'They say there are very old books in the forbidden part. I’ll come.'],
-    ['elora', '那就在星盤廳會合。小心赫爾嘉夫人，她會提著燈巡夜。', 'Then we meet in the Astrolabe Hall. Watch out for Madam Helga — she patrols with her lamp.'],
-    [null, '（宿舍的門上了魔法鎖。在交誼廳裡找出打開它的方法。）', '(The dormitory door is sealed by a spell. Find a way to open it in the common room.)'],
+    [null, '萬聖節前一天，最後一堂課結束之後。魔藥學教室裡只剩一排排還在冒泡的大釜。', 'The day before Halloween, after the last lesson. Only rows of bubbling cauldrons remain in the potions classroom.'],
+    ['vaughn', '諾克斯一直在問我們那晚去了哪裡。她一定知道什麼。', 'Knox keeps asking where we were that night. She knows something.'],
+    ['cyril', '那就趁她不在，翻她的東西。很好，我們現在是小偷了。', 'So we rummage through her things while she’s out. Lovely. We’re burglars now.'],
+    [null, '（諾克斯教授會回來巡視：被她的燈照到，會被罵、送回門口。躲在大釜後面或講桌底下。）', '(Professor Knox comes back to check the room: if her lamp finds you, you’re scolded and sent back to the door. Hide behind a cauldron or under the desk.)'],
   ],
-  'solved:P03': [[null, '門上浮現一行字：「記住我的時辰。」門開了。', 'Words surface on the door: “Remember my hour.” The door opens.']],
-  'solved:P04': [[null, '符文亮起：「記住你的時辰。」門開了。', 'The rune flares: “Remember your hour.” The door opens.']],
-  'solved:P05': [[null, '秤盤沉下去，牆上的獵犬徽章眨了眨眼：「記住你的時辰。」門開了。', 'The pan sinks; the hound crest on the wall blinks: “Remember your hour.” The door opens.']],
-  'solved:P06': [[null, '你敲了門。牆上時鐘的長針停住了，門開了。', 'You knock. The long hand of the wall clock stops. The door opens.']],
-  'solved:P07': [[null, '使魔飛回你肩上。其他塔的同伴已經出發了。', 'Your familiar returns to your shoulder. The others have already set out.']],
-  'enter:starhall': [
-    [null, '星盤廳。巨大的星盤在地上緩緩轉動，四個學院的徽章刻在四個圓環上。', 'The Astrolabe Hall. A vast astrolabe turns slowly in the floor, the four house crests carved into its four rings.'],
-    [null, '（遠處有提燈的光——是赫爾嘉夫人。被燈照到會被抓回宿舍；她面前地上那片光，就是她看得到的地方。躲在柱子後面，燈就照不到你。）', '(A lamp glows in the distance — Madam Helga. If her light finds you, you’ll be sent back to bed; the pool of light on the floor in front of her is what she can see. Stay behind the pillars and her lamp can’t reach you.)'],
+  'caught': [['knox', '你們在我的教室裡做什麼？出去。現在。', 'What are you doing in my classroom? Out. Now.']],
+  'solved:Q03': [[null, '藥水變成清澈的銀白色。講台後面那個櫃子上的封印，「喀」的一聲鬆開了。', 'The draught turns a clear silver-white. With a click, the seal on the cabinet behind the lectern loosens.']],
+  'solved:Q04': [
+    [null, '抽屜打開了。裡面是諾克斯的筆記，只寫了一行：「下一個：萬聖夜。」', 'The drawer opens. Inside is Knox’s note, a single line: “Next: Halloween night.”'],
+    ['yuexi', '紅圈……是名單。被圈起來的人，都不見了。', 'The red circles… it’s a list. Everyone circled has disappeared.'],
   ],
-  'caught': [['helga', '這麼晚了，還在外面晃？回床上去！', 'Out of bed at this hour? Back to your dormitory!']],
-  'solved:P08': [
-    [null, '四個圓環咬合的聲音在大廳裡迴盪。往北的門，無聲地打開了。', 'The four rings lock together with a sound that echoes through the hall. The northern door swings open without a sound.'],
-    ['elora', '（拿出一把舊鑰匙）我知道從哪裡下去。', '(producing an old key) I know the way down.'],
-    ['vaughn', '這把鑰匙哪來的？', 'Where did you get that key?'],
-    ['elora', '……祕密。走吧。', '…That’s a secret. Come on.'],
+  'solved:Q05': [
+    [null, '櫃子打開了：完整的點名簿，還有一頁日記。通往溫室的門也開了。', 'The cabinet opens: the complete roll book, and a page of diary. The door to the greenhouse swings open.'],
+    [null, '日記：「最裡面那一盆，我每天都會去看它。它長得太快了。」', 'The diary: “I visit the one at the very back every day. It is growing far too fast.”'],
+  ],
+  'enter:greenhouse': [
+    [null, '溫室。玻璃屋頂上結著霧，一排排植物在月光下一動也不動。最裡面那一盆，是黑色的。', 'The greenhouse. Mist beads on the glass roof; rows of plants stand utterly still in the moonlight. The one at the very back is black.'],
+    [null, '（門口有一張植物清單。找出三個跟清單不一樣的地方，用「探查」標記起來。）', '(There is a plant list by the door. Find the three places that don’t match it, and mark them with “Inspect”.)'],
+  ],
+  'solved:Q06': [[null, '標記的三個地方同時亮起來。溫室最裡面的那扇門，慢慢打開了。', 'The three marked places light up together. The door at the back of the greenhouse creaks open.']],
+  'solved:Q07': [['elora', '「黑色的那盆……會吃人。」', '“The black one… eats people.”'], ['vaughn', '……我們要經過它旁邊，對吧。', '…And we have to walk right past it. Right.']],
+  'solved:Q08': [
+    [null, '黑板上的字自己補完了。最後一行，用另一種筆跡寫著：「她已經來不及了。」', 'The writing on the blackboard completes itself. The last line is in a different hand: “It is already too late for her.”'],
+    ['elora', '（把手套拉緊了一點。）', '(Tugs her gloves a little tighter.)'],
+  ],
+  'solved:Q09': [
+    [null, '四組灑水器同時停下的那一刻，黑色的根「嘶」地一聲縮回土裡。後門打開了。', 'The instant all four sprinklers fall silent, the black roots hiss and shrink back into the soil. The back door opens.'],
+    [null, '門外是往醫務室的走廊。遠處，有人在哼歌——是校醫歐文。', 'Beyond it is the corridor to the infirmary. Somewhere ahead, someone is humming — Matron Owen.'],
   ],
   'mirror': [[null, '字是反著寫的……像是有人從鏡子的另一邊，用手指寫給你看。', 'The letters are backwards… as if someone wrote them with a finger from the other side of the glass.']],
   // ---- 第二幕：肖像畫長廊 ----

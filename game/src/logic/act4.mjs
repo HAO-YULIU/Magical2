@@ -122,7 +122,7 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
         if (active) { active = false; hud.hidden = true; wstate.hidden = true; setVeil(null, 0); document.body.classList.remove('a4danger'); warn.hidden = true; world.tired = false; setMusic(null); setLoop('hide_breath', 0); }
         if (ending === 'climax' && !talking()) { // 守夜人墜下屋頂之後：回到宿舍，播尾聲
           ending = 'epilogue'; warden.set({ visible: false }); world.setDark(false);
-          world.teleport(SPAWNS.act1?.[CHARS[myChar()]?.house] ?? A4_SPAWN); playScript('segment:epilogue');
+          world.teleport(SPAWNS.prologue?.[CHARS[myChar()]?.house] ?? A4_SPAWN); playScript('segment:epilogue');
         } else if (ending === 'epilogue' && !talking()) { // 尾聲講完：最後的演出（熄燈、鏡子），然後第一章結束
           ending = 'finale'; setMusic(null);
           finale(() => { ending = null; setMusic('menu');

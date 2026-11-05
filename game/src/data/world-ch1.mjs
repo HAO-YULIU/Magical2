@@ -4,6 +4,7 @@
 
 import { LIB_ROOMS, LIB_DOORS, LIB_THINGS, LIB_SPAWNS } from './library-ch1.mjs';
 import { A4_ROOMS, A4_DOORS, A4_THINGS, A4_SPAWN } from './act4-ch1.mjs';
+import { CH2_ROOMS, CH2_DOORS, CH2_THINGS, CH2_SPAWNS, CH2_PATROL } from './ch2-act1.mjs';
 
 const L = (zh, en) => ({ zh, en });
 
@@ -34,10 +35,10 @@ export const ROOMS = [
 export const DOORS = [
   { id: 'dock-hall', a: 'dock', b: 'hall', x: 0, z: 140, w: 4, axis: 'x', lock: null },
   { id: 'hall-banquet', a: 'hall', b: 'banquet', x: -10, z: 125, w: 4, axis: 'z', lock: null },
-  { id: 'eldrin-star', a: 'dorm_eldrin', b: 'starhall', x: 9, z: 0, w: 2.4, axis: 'z', lock: { puzzle: 'P03' } },
-  { id: 'grimoire-star', a: 'dorm_grimoire', b: 'starhall', x: -9, z: 0, w: 2.4, axis: 'z', lock: { puzzle: 'P04' } },
-  { id: 'belmont-star', a: 'dorm_belmont', b: 'starhall', x: -4.5, z: 9, w: 2.4, axis: 'x', lock: { puzzle: 'P05' } },
-  { id: 'ouroboros-star', a: 'dorm_ouroboros', b: 'starhall', x: 4.5, z: 9, w: 2.4, axis: 'x', lock: { puzzle: 'P06' } },
+  { id: 'eldrin-star', a: 'dorm_eldrin', b: 'starhall', x: 9, z: 0, w: 2.4, axis: 'z', lock: { puzzle: 'closed' } }, // 第二章：宿舍門不開（序幕走「下樓到大廳」）
+  { id: 'grimoire-star', a: 'dorm_grimoire', b: 'starhall', x: -9, z: 0, w: 2.4, axis: 'z', lock: { puzzle: 'closed' } }, // 第二章：宿舍門不開（序幕走「下樓到大廳」）
+  { id: 'belmont-star', a: 'dorm_belmont', b: 'starhall', x: -4.5, z: 9, w: 2.4, axis: 'x', lock: { puzzle: 'closed' } }, // 第二章：宿舍門不開（序幕走「下樓到大廳」）
+  { id: 'ouroboros-star', a: 'dorm_ouroboros', b: 'starhall', x: 4.5, z: 9, w: 2.4, axis: 'x', lock: { puzzle: 'closed' } }, // 第二章：宿舍門不開（序幕走「下樓到大廳」）
   { id: 'star-north', a: 'starhall', b: 'north_hall', x: 0, z: -9, w: 3, axis: 'x', lock: { segment: 'act2' } },
   { id: 'north-corridor', a: 'north_hall', b: 'corridor', x: 0, z: -20, w: 5, axis: 'x', lock: { puzzle: 'P30' } },
   { id: 'corridor-founder', a: 'corridor', b: 'founder', x: 0, z: -64, w: 2.4, axis: 'x', lock: { puzzle: 'P09' } },
@@ -178,11 +179,7 @@ export const RUMORS = [
 ];
 
 // 赫爾嘉夫人：沿著星盤廳巡邏（第一幕）。位置由「這一段開始的時間」算出來，所有人看到的一樣，不用傳訊息
-export const PATROL = {
-  room: 'starhall', period: 44, // 走一圈幾秒
-  path: [[-7, -7], [7, -7], [7, 7], [-7, 7]],
-  view: 8, fov: 60, // 提燈照得到的距離（公尺）、角度
-};
+export const PATROL = CH2_PATROL; // 第二章：第一幕是諾克斯教授在魔藥學教室巡邏（ch2-act1.mjs）
 
 // 第三幕：沉眠圖書館（game/src/data/library-ch1.mjs）
 ROOMS.push(...LIB_ROOMS);
@@ -194,3 +191,12 @@ ROOMS.push(...A4_ROOMS);
 DOORS.push(...A4_DOORS);
 THINGS.push(...A4_THINGS);
 SPAWNS.act4 = A4_SPAWN;
+
+// ---- 第二章（2026-11-05）：拿掉第一章序幕、第一幕的謎題，換成第二章的（ch2-act1.mjs） ----
+const CH1_ONLY = new Set(['seat', 'lock_eldrin', 'ceiling_eldrin', 'lock_grimoire', 'runechart', 'scale', 'huntlog', 'hourglass', 'disk',
+  ...['eldrin', 'grimoire', 'belmont', 'ouroboros'].flatMap((h) => [`window_${h}`, `mirror_${h}`])]);
+for (let i = THINGS.length - 1; i >= 0; i--) if (CH1_ONLY.has(THINGS[i].id)) THINGS.splice(i, 1);
+ROOMS.push(...CH2_ROOMS);
+DOORS.push(...CH2_DOORS);
+THINGS.push(...CH2_THINGS);
+SPAWNS.prologue = CH2_SPAWNS.prologue; SPAWNS.act1 = CH2_SPAWNS.act1; SPAWNS.hall = CH2_SPAWNS.hall;

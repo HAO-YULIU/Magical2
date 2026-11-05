@@ -13,12 +13,14 @@ import { CHARS, HOUSES } from './chars.mjs';
 import { SCRIPT } from '../data/story-ch1.mjs';
 import { sfx, buzz } from '../art/sfx.mjs';
 import { captionsOn } from '../ui/captions.mjs';
-import { SPAWNS, DOORS, ROOMS, RUMORS, THINGS, FINALE_MIRROR, MIRRORS } from '../data/world-ch1.mjs';
+import { SPAWNS, DOORS, ROOMS, RUMORS, THINGS, FINALE_MIRROR, MIRRORS, PATROL } from '../data/world-ch1.mjs';
 const THINGS_BY_ID = Object.fromEntries(THINGS.map((x) => [x.id, x]));
 import { HEADMASTERS } from '../data/story-ch1.mjs';
 import { CREDITS } from '../data/credits.mjs';
 import { createAct2 } from './act2.mjs';
 import { createAct3 } from './act3.mjs';
+import { createCh2 } from './ch2act1.mjs';
+import { createCh2Scene } from '../world/ch2scene.mjs';
 import { createAct4 } from './act4.mjs';
 import { createScares } from '../world/scares.mjs';
 import { createMirrors } from '../world/mirrors.mjs';
@@ -85,6 +87,8 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     }, 1800);
   }
   const act3 = createAct3({ world, conn, toast, say, S, myChar: () => me()?.char, solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); }, serverNow: () => Date.now() + clockOffset });
+  const ch2scene = createCh2Scene(world.scene, conn); // 第二章：萬聖節布置、魔藥學教室與溫室的擺設
+  const ch2 = createCh2({ conn, toast, say, S, myHouse, scene: ch2scene, solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); } });
   const act4 = createAct4({ world, conn, toast, say, talking, S, myUid, myChar: () => me()?.char, receiver, serverNow: () => Date.now() + clockOffset, holding: () => holding, dev, playScript: (k) => play(k), finale,
     solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); } });
   if (dev) window.__ml = { myUid, receiver, world, conn, sent: 0, notes, heard, act2, act3, act4, get state() { return S(); } };
@@ -92,10 +96,8 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
   // ---- 段落開始：移到出發點、播劇情 ----
   function enterSegment(seg, first) {
     segment = seg;
-    if (seg === 'prologue' && first) {
-      const i = Math.max(0, S().members.findIndex((m) => m.uid === myUid));
-      world.teleport({ ...SPAWNS.prologue, x: SPAWNS.prologue.x + (i - 1.5) * 1.4 });
-    } else if (seg === 'act1') world.teleport(SPAWNS.act1[myHouse()] ?? SPAWNS.act1.eldrin);
+    if (seg === 'prologue' && first) world.teleport(SPAWNS.prologue[myHouse()] ?? SPAWNS.prologue.eldrin); // 第二章：從自己學院的交誼廳出發
+    else if (seg === 'act1') { world.teleport(SPAWNS.act1); ch2scene.enterAct1(); }
     else if (seg === 'act2') { world.teleport(SPAWNS.act2); act2.enter(); }
     else if (seg === 'act3a') { act2.leave(); world.teleport(SPAWNS.act3a); }
     else if ((seg === 'act3b' || seg === 'act3c') && first) world.teleport(SPAWNS[seg]); // 重新連線時才傳送（平常是走過去的）
@@ -148,6 +150,11 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     if (!tg) return;
     focusNext = tg; setTimeout(() => { focusNext = null; }); // 這次調查打開的視窗，鏡頭看著這個東西
     if (act2.interact(tg) || act3.interact(tg) || act4.interact(tg)) return;
+    if (tg.kind === 'goto') { // 第二章：走到別的地方（序幕：解開 Q01 才能下樓到大廳）
+      if (tg.needs && !S().solved.includes(tg.needs)) return toast(getLang() === 'en' ? 'Not yet — look at the mirror first.' : '先看看鏡子上寫了什麼。');
+      world.teleport(tg.to); return;
+    }
+    if (ch2.interact(tg)) return;
     if (tg.kind === 'mirrorfog') { if (mirrors.breathe(tg.id)) setTimeout(() => play('mirror'), 2500); return; }
     if (tg.kind === 'plaques') return openPanel(L(tg.label), (body) => body.append(el('ul', { class: 'plaques' }, ...HEADMASTERS.map((h) => el('li', { text: L(h) })))));
     if (tg.kind === 'prop' && tg.text) return say([[null, tg.text.zh, tg.text.en]]);
@@ -258,10 +265,10 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
       const h = patrolAt((Date.now() + clockOffset - (st.segAt ?? 0)) / 1000);
       world.setHelga(h);
       const speed = Math.hypot(mine.v[0], mine.v[1]);
-      if (mine.z === 'starhall' && now > caughtCool && !panelOpen() && !talking() &&
+      if (mine.z === PATROL.room && now > caughtCool && !panelOpen() && !talking() &&
           helgaSees(h, { x: mine.p[0], z: mine.p[1] }, { moving: speed > 0.3, running: speed > 2.6, holding, hidden: world.hidden() })) {
         caughtCool = now + 3000;
-        world.teleport(SPAWNS.act1[myHouse()] ?? SPAWNS.act1.eldrin);
+        world.teleport(SPAWNS.act1);
         say(SCRIPT.caught); toast(t('caught'));
       }
     } else world.setHelga(null);

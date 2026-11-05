@@ -28,7 +28,7 @@ const SEG_GATES = {
   act3c: { need: ['P18', 'P19', 'P20', 'P21', 'P23', 'P24', 'P25'], next: 'act4' },
 };
 // 玩家自己撿到的東西（莉安娜的筆記、髮夾）；其他道具由解開題目得到（data/puzzles/ch1.mjs 的 gives）
-const PICKUPS = ['note1', 'note2', 'note4', 'hairclip'];
+const PICKUPS = ['clue_eldrin', 'clue_grimoire', 'clue_belmont', 'clue_ouroboros', 'note1', 'note2', 'note4', 'hairclip'];
 
 export class Room extends DurableObject {
   constructor(ctx, env) {

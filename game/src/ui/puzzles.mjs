@@ -9,6 +9,7 @@ import { sfx } from '../art/sfx.mjs';
 import { captionsOn } from './captions.mjs';
 import { LEVERS, BOLTS_LOCKED, GEAR_RACK, AXLE_GAPS, LYRIC, LYRIC_MARKS } from '../data/act4-ch1.mjs';
 import { HOUSES } from '../logic/chars.mjs';
+import { BUILD_CH2 } from './puzzles-ch2.mjs';
 
 const ZODIAC = [
   ['aries', '♈', '牡羊', 'Aries'], ['taurus', '♉', '金牛', 'Taurus'], ['gemini', '♊', '雙子', 'Gemini'], ['cancer', '♋', '巨蟹', 'Cancer'],
@@ -551,6 +552,7 @@ const BUILD = {
   // P29：屋頂入口的刻字（石板本身在場景裡踩）
   roofsign(body) { body.append(el('blockquote', { text: t('p29_quote') }), el('p', { class: 'dim', text: t('p29_sign') })); },
 };
+Object.assign(BUILD, BUILD_CH2); // 第二章的謎題畫面（puzzles-ch2.mjs）
 
 // ---- 蝕巢：救援題（R，同伴來救）、自救題（S，被抓的人自己解）。題目內容由伺服器給 ----
 export function openRescue(conn, kind, target, toast) {
