@@ -65,6 +65,19 @@ export function createCh2Scene(scene, conn) {
   const book = rollBook({ seed: 3 }); book.scale.setScalar(0.8); put(book, 37.5, -7.2, 0, 1.12);
   const cab = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2.2, 1.4), new THREE.MeshStandardMaterial({ color: '#2a1e16', roughness: 0.7 })); put(cab, 44.65, -5, 0, 1.1);
   for (let i = 0; i < 6; i++) put(jackOLantern({ size: 0.3, face: i % 4, light: i === 0 }), 31 + i * 2.6, 9.4, Math.PI);
+  // 小東西：沒有標籤的瓶子、日記、牆上的鐘（XIII）、課表、植物清單、澆水時刻表、四學院的線索台
+  const paperTex = (lines, w = 256, h = 192, bg = '#d8c9a4') => { const c = document.createElement('canvas'); c.width = w; c.height = h; const g = c.getContext('2d'); g.fillStyle = bg; g.fillRect(0, 0, w, h); g.fillStyle = '#2a1e12'; g.font = '20px serif'; lines.forEach((l, i) => g.fillText(l, 12, 30 + i * 26)); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; };
+  const paper = (lines, x, y, z, yaw, w = 0.6, h = 0.45) => put(new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshStandardMaterial({ map: paperTex(lines), roughness: 0.9 })), x, z, yaw, y);
+  put(new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.26, 12), new THREE.MeshStandardMaterial({ color: '#050307', roughness: 0.1, metalness: 0.2 })), 30.6, 2.5, 0, 0.13);
+  put(new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.06, 0.24), new THREE.MeshStandardMaterial({ color: '#4a1414', roughness: 0.7 })), 41, -7.5, 0.3, 0.88);
+  { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#e8e0cc'; g.beginPath(); g.arc(128, 128, 124, 0, 7); g.fill(); g.fillStyle = '#2a1e12'; g.font = '22px serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII', 'XIII'].forEach((n, i) => { const a = (i / 13) * Math.PI * 2 - Math.PI / 2; g.fillStyle = n === 'XIII' ? '#8a0a0a' : '#2a1e12'; g.fillText(n, 128 + Math.cos(a) * 98, 128 + Math.sin(a) * 98); });
+    const a = (12 / 13) * Math.PI * 2 - Math.PI / 2; g.strokeStyle = '#111'; g.lineWidth = 5; g.beginPath(); g.moveTo(128, 128); g.lineTo(128 + Math.cos(a) * 80, 128 + Math.sin(a) * 80); g.stroke();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; put(new THREE.Mesh(new THREE.CircleGeometry(0.4, 32), new THREE.MeshStandardMaterial({ map: t, roughness: 0.8 })), 44.85, 3, -Math.PI / 2, 2); }
+  paper(['今天的課：', '① 月光草', '② 蝙蝠翅', '③ 銀粉'], 43.6, 1.7, -9.78, 0, 0.6, 0.45);
+  paper(['植物清單', '（請比對）'], 45.2, 1.2, 2.4, Math.PI / 2, 0.6, 0.45);
+  paper(['澆水時刻表', '甲 4 分 乙 6 分', '丙 9 分 丁 12 分', '8:00 一起'], 56.85, 1.5, -9, -Math.PI / 2, 0.8, 0.6);
+  for (const [i, col] of ['#9fc4ff', '#c0454f', '#d1a640', '#4fa37a'].entries()) { const st = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.28, 0.9, 8), new THREE.MeshStandardMaterial({ color: '#5a5a60', roughness: 0.9, emissive: col, emissiveIntensity: 0.12 })); put(st, 51, -6 + i * 4, 0, 0.45); }
 
   // ---- 溫室（x 45～57、z -12.5～12.5）：一排排花盆、灑水器、最裡面的黑色植物 ----
   const pot = (x, z, s = 1, col = '#4a7a3a') => { const g = new THREE.Group(); const p = new THREE.Mesh(new THREE.CylinderGeometry(0.22 * s, 0.16 * s, 0.32 * s, 10), new THREE.MeshStandardMaterial({ color: '#8a4a2a', roughness: 0.9 })); p.position.y = 0.16 * s; g.add(p); const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.28 * s, 8, 6), new THREE.MeshStandardMaterial({ color: col, roughness: 0.8 })); leaf.position.y = 0.48 * s; leaf.scale.y = 1.2; g.add(leaf); return put(g, x, z); };

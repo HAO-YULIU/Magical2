@@ -21,7 +21,7 @@ export const CH2_SPAWNS = {
     ouroboros: { x: 4.5, z: 20, yaw: 0 },
   },
   hall: { x: 0, z: 136, yaw: 0 },
-  act1: { x: 37.5, z: 8.5, yaw: 0 },
+  act1: { x: 37.5, z: 9.2, yaw: 0 },
 };
 
 // 序幕：Q01 的鏡子位置（沿用第一章的古鏡）
@@ -46,10 +46,10 @@ export const GREEN_LIST = L(
   'Row one: 3 ferns, 5 mandrakes, 4 pots of moonwort, 2 flytraps. Row two: 3 nightshade, the ivy on the wall, 4 cacti, 3 lilies in the tank. At the back: 1 black plant (do not touch).');
 
 // 諾克斯教授（還沒蝕化）：在魔藥學教室巡邏；被她的燈照到會被罵、送回教室門口（跟第一章赫爾嘉夫人一樣的規則）
-export const CH2_PATROL = {
+export const CH2_PATROL = { // 教室前半（講台那一側）；門口（南邊）不會被照到，剛進來不會馬上被抓
   room: 'potions', period: 40,
-  path: [[32.5, -7.5], [42.5, -7.5], [42.5, 6], [32.5, 6]],
-  view: 7, fov: 60,
+  path: [[32.5, -8.5], [42.5, -8.5], [42.5, 1.5], [32.5, 1.5]],
+  view: 6, fov: 60,
 };
 
 const HOUSE_CLUE = {
@@ -59,7 +59,7 @@ const HOUSE_CLUE = {
   ouroboros: L('澆水壺裡的水被下了藥，聞起來是生肉的味道——有人在餵它。它吃「人」。', 'The water in the can has been dosed. It smells of raw meat — someone has been feeding it. It eats “people.”'),
 };
 
-export const CH2_THINGS = [
+export const CH2_THINGS = [ // 外觀全部由 world/ch2scene.mjs 畫（hidden：不畫灰盒方塊）
   // ---------- 序幕 ----------
   ...DORM_MIRRORS.map((m) => ({ id: `q01_${m.house}`, hidden: true, room: `dorm_${m.house}`, kind: 'puzzle', puzzle: 'Q01', x: m.x, z: m.z, size: [1.0, 1.7, 0.4], y: 0.7, solid: false,
     label: L('起霧的鏡子', 'The fogged mirror') })),
@@ -102,4 +102,4 @@ export const CH2_THINGS = [
   { id: 'sprinkler_table', room: 'greenhouse', kind: 'prop', x: 56.6, z: -9, size: [0.3, 1, 1.2], y: 1, solid: false, label: L('牆上的澆水時刻表', 'The watering timetable on the wall'),
     text: L('甲組每 4 分噴一次、乙組每 6 分、丙組每 9 分、丁組每 12 分。今晚四組一起噴的時間：8 點整。旁邊是園藝筆記：「四組同時停下的那一刻，它會縮回土裡。」', 'Group A sprays every 4 minutes, B every 6, C every 9, D every 12. All four sprayed together tonight at 8:00 sharp. A gardener’s note beside it: “At the moment all four stop together, it shrinks back into the soil.”') },
   { id: 'q09_lever', room: 'greenhouse', kind: 'puzzle', puzzle: 'Q09', x: 51, z: -11.6, size: [1.6, 1.6, 0.6], solid: true, label: L('後門的拉桿（黑色植物的根纏在鐵柵上）', 'The back-door lever (black roots coil round the bars)') },
-];
+].map((x) => ({ hidden: true, ...x }));
