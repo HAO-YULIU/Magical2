@@ -128,7 +128,7 @@ const A2 = [
   { id: 'q10_records', room: 'infirmary', kind: 'puzzle', puzzle: 'Q10', x: 66, z: -7.6, size: [1.4, 0.9, 0.8], solid: true, label: L('校醫的桌子：去年的住院紀錄', 'The matron’s desk: last year’s admissions') },
   ...BEDS.map(([x, z], i) => ({ id: `bed${i + 1}`, room: 'infirmary', kind: 'prop', x, z, size: [1.0, 0.7, 2.0], solid: true, label: L(`${i + 1} 號床`, `Bed ${i + 1}`),
     text: L(`床頭的牌子：${i + 1} 號。床單洗得很白，有一塊洗不掉的黃斑。`, `The sign at the head reads ${i + 1}. The sheets are bleached white, with one yellow stain that never washed out.`) })),
-  { id: 'q11_cabinet', room: 'infirmary', kind: 'puzzle', puzzle: 'Q11', x: 73.6, z: -8.4, size: [0.6, 2, 1.4], solid: true, label: L('藥櫃（天平鎖）', 'The medicine cabinet (a balance lock)') },
+  { id: 'q11_cabinet', room: 'infirmary', kind: 'puzzle', puzzle: 'Q11', x: 71.2, z: -8.6, size: [1.4, 2, 0.6], solid: true, label: L('藥櫃（天平鎖）', 'The medicine cabinet (a balance lock)') },
   { id: 'q15_crystal', room: 'infirmary', kind: 'puzzle', puzzle: 'Q15', x: 67, z: -7.6, size: [0.4, 0.5, 0.4], y: 0.9, solid: false, label: L('桌上的留聲水晶（只有心跳聲）', 'An echo crystal on the desk (only a heartbeat)') },
   { id: 'medbook', room: 'infirmary', kind: 'prop', x: 65, z: -7.6, size: [0.4, 0.2, 0.3], y: 0.9, solid: false, label: L('醫學書（翻開的那一頁）', 'A medical book (open)'),
     text: L('「脈搏的記錄方式：長的一拍記作『－』，短的一拍記作『・』。」旁邊有人用鉛筆抄了一張字母表：A ・－　K －・－　N －・　O －－－　X －・・－ ……', '“Recording a pulse: a long beat is written ‘–’, a short beat ‘·’.” Beside it someone has pencilled a table: A ·–  K –·–  N –·  O –––  X –··– …') },

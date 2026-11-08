@@ -112,7 +112,7 @@ export function createCh2Scene(scene, conn) {
   BEDS.forEach(([x, z], i) => put(hospitalBed({ bloody: i === 5 }), x, z, x < 68 ? Math.PI / 2 : -Math.PI / 2));
   const desk2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.85, 0.8), new THREE.MeshStandardMaterial({ color: '#5a4a3a', roughness: 0.8 })); put(desk2, 66, -7.6, 0, 0.425);
   const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), new THREE.MeshStandardMaterial({ color: '#c8a0ff', emissive: '#6a3aaa', emissiveIntensity: 0.8, roughness: 0.1 })); put(crystal, 67, -7.6, 0, 1.0);
-  const medcab = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2, 1.4), new THREE.MeshStandardMaterial({ color: '#e8e8e0', roughness: 0.5 })); put(medcab, 73.65, -8.4, 0, 1);
+  const medcab = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2, 0.6), new THREE.MeshStandardMaterial({ color: '#e8e8e0', roughness: 0.5 })); put(medcab, 71.2, -8.65, 0, 1);
   const trap = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1), new THREE.MeshStandardMaterial({ color: '#2a1e14', roughness: 0.9 })); put(trap, 69.5, -4, 0, 0.03);
   // 校醫歐文（活著的時候）：赫爾嘉夫人的模型換成白色制服
   let owen = null;
