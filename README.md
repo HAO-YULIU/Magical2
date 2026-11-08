@@ -15,7 +15,7 @@
 
 ## 遊戲程式（2026-11-04）
 - 製作人確認：**複製第一章的程式當底**（`game/`、`server/`、`data/`、`tools/`、`assets/`、`prototype/`）。目前內容還是第一章的，本機可以從頭玩到結局；之後一段一段換成第二章。說明見 `CLAUDE.md`。
-- Worker 名稱 `magical2`，還沒部署。
+- Worker 名稱 `magical2`。**2026-11-08 第一次部署**（製作人要求）：https://magical2.noron.workers.dev/ （測試用，跟第一章的網站分開）。
 
 ## 做進遊戲的進度
 - 2026-11-05：**序幕＋第一幕做好了**（本機測試從序幕玩到第一幕結束，9 題都能打開、答錯會擋、答對會過，沒有錯誤）。
@@ -26,7 +26,6 @@
 ## 還沒決定
 - 整份劇情、地圖（27 題）、謎題細節是否確定。
 - 新場景想用的模型。
-- 第二章什麼時候第一次部署（網址）。
 
 ## 本機預覽美術
 `preview/props.html?show=cauldron`（cauldron、blackboard、shelf、juice、barrel、sprinkler、crest、gate）。three.js 用第一章儲存庫的 `prototype/vendor/three.module.min.js`；用 Playwright 直接從硬碟讀檔案截圖，不用開伺服器。

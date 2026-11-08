@@ -43,7 +43,7 @@ if (existsSync(join(ROOT, 'game/img'))) cpSync(join(ROOT, 'game/img'), join(DIST
 if (existsSync(join(ROOT, 'game/models'))) cpSync(join(ROOT, 'game/models'), join(DIST, 'models'), { recursive: true }); // 角色模型（帳號二，game/src/art/）
 
 // 3. 檢查：發佈版裡不能有答案資料
-const leak = ['鐘在井底', 'THE BELL LIES IN THE WELL', 'SOLVE VINCULA', 'grimoire:11', '1,6,11,16,15,14,13'];
+const leak = ['鐘在井底', 'THE BELL LIES IN THE WELL', 'SOLVE VINCULA', 'grimoire:11', '1,6,11,16,15,14,13', 'mandrake,shriek,serpent', 'moonwort,batwing,silver', 'blackroot,thirteen,hername', 'tri,stitch']; // 第二章的答案也檢查
 const walk = (d) => readdirSync(d).flatMap((f) => (statSync(join(d, f)).isDirectory() ? walk(join(d, f)) : [join(d, f)]));
 for (const f of walk(DIST).filter((f) => ['.js', '.html', '.css', '.json'].includes(extname(f)))) {
   const text = readFileSync(f, 'utf8');
