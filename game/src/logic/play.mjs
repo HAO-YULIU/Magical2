@@ -98,8 +98,8 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     segment = seg;
     if (seg === 'prologue' && first) world.teleport(SPAWNS.prologue[myHouse()] ?? SPAWNS.prologue.eldrin); // 第二章：從自己學院的交誼廳出發
     else if (seg === 'act1') { world.teleport(SPAWNS.act1); ch2scene.enterAct1(); }
-    else if (seg === 'act2') { world.teleport(SPAWNS.act2); act2.enter(); }
-    else if (seg === 'act3a') { act2.leave(); world.teleport(SPAWNS.act3a); }
+    else if (seg === 'act2') world.teleport(SPAWNS.act2); // 第二章：醫務室（第一章的長廊不用了）
+    else if (seg === 'act3a') world.teleport(SPAWNS.act3a);
     else if ((seg === 'act3b' || seg === 'act3c') && first) world.teleport(SPAWNS[seg]); // 重新連線時才傳送（平常是走過去的）
     else if (seg === 'act4') act4.begin(false);
     else if (seg === 'epilogue') return act4.end(); // 尾聲的劇情由 act4 排順序
@@ -121,6 +121,9 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
   function onState(st, before) {
     devtools?.refresh();
     world.syncSolved(st.solved ?? []);
+    if (st.solved?.includes('Q10')) ch2scene.hideOwen(); // 第二章：重新連線時場景跟上進度
+    if (st.solved?.includes('Q13')) ch2scene.showCorpse();
+    if (st.segment === 'act1') ch2scene.enterAct1();
     clockOffset = (st.now ?? Date.now()) - Date.now();
     const people = st.members.filter((m) => m.uid !== myUid).map((m) => ({ key: m.uid, label: m.name, char: m.char }));
     for (const c of aiChars()) people.push({ key: `ai:${c}`, label: CHARS[c][getLang()], char: c });
@@ -139,6 +142,8 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     updateDoors();
     act2.onSolved(pid);
     if (pid === 'P29') return; // 屋頂的高潮由 act4.end() 播（守夜人最後那句話只有西里爾聽清楚）
+    if (pid === 'Q10') ch2scene.hideOwen?.();
+    if (pid === 'Q13') ch2scene.showCorpse?.();
     if (by === myUid || !['P03', 'P04', 'P05', 'P06', 'P07'].includes(pid)) play(`solved:${pid}`); // 宿舍門鎖只有解開的人看得到
   }
 

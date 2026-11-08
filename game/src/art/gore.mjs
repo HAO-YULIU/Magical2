@@ -267,9 +267,9 @@ export function wallSmear(parent, x, y, z, { normal = [1, 0, 0], w = 1.2, seed =
 /** 被拖進蝕巢的學生：仰躺在地上、頭朝牆，胸口被撐開，肋骨外翻、內臟拖到身體兩邊，黑色結晶從地板刺穿身體。
  *  x、z＝身體中間；face＝腳朝的方向 [fx, fz]（頭在反方向）。回傳 Promise<group>
  *  （角色模型的腿不是一根根能彎的骨頭，擺不出坐姿，所以用整個人轉過來躺著的做法，跟高年級生一樣） */
-export async function buildVictim(parent, x, z, face = [-1, 0], { seed = 41 } = {}) {
+export async function buildVictim(parent, x, z, face = [-1, 0], { seed = 41, model: modelKey = 'vaughn', robe = '#4a2a2a' } = {}) {
   const group = new THREE.Group(); parent.add(group);
-  const c = await loadCharacter('vaughn');
+  const c = await loadCharacter(modelKey);
   const model = c.root;
   model.traverse((o) => {
     if (!o.isMesh) return; o.material = Array.isArray(o.material) ? o.material.map((m) => m.clone()) : o.material.clone();
@@ -277,7 +277,7 @@ export async function buildVictim(parent, x, z, face = [-1, 0], { seed = 41 } = 
       const n = m.name || '';
       if (/Skin_|Nails/.test(n)) { m.color?.set('#7f8688'); if (m.sheenColor) m.sheen = 0; }
       else if (/Hair|Scalp|Transparency/.test(n)) m.color?.set('#1c1410');
-      else if (/robe|shoes/.test(n)) m.color?.multiply(new THREE.Color('#4a2a2a')); // 袍子被血浸透
+      else if (/robe|shoes/.test(n)) m.color?.multiply(new THREE.Color(robe)); // 袍子被血浸透
     }
     o.castShadow = true; o.receiveShadow = true;
   });

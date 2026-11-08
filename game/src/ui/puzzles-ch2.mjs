@@ -3,6 +3,7 @@
 import { el } from './overlay.mjs';
 import { getLang } from '../logic/i18n.mjs';
 import { PUMPKIN_GRID } from '../data/ch2-act1.mjs';
+import { sfx } from '../art/sfx.mjs';
 import { HOUSES } from '../logic/chars.mjs';
 
 const T = (zh, en) => (getLang() === 'en' ? en : zh);
@@ -99,4 +100,83 @@ export const BUILD_CH2 = {
     body.append(el('p', { class: 'dim', text: T('溫室的時鐘走得很快（一分鐘只有三秒）。黑色的根纏在後門的鐵柵上。', 'The greenhouse clock runs fast (a minute lasts three seconds). Black roots coil round the bars of the back door.') }),
       clock, el('button', { class: 'primary', text: T('拉下拉桿！', 'Pull the lever!'), onclick: () => { const { h, m } = now(); submit(`${h}:${String(m).padStart(2, '0')}`); } }));
   },
+  // ===== 第二幕 =====
+  // Q10：去年的住院紀錄
+  Q10(body, { submit }) {
+    const ROWS = [['9/13', '3', T('發燒', 'fever')], ['10/2', '5', T('扭傷', 'sprain')], ['10/13', '13', T('左手出現黑紋', 'black veins, left hand')], ['11/13', '13', T('左手出現黑紋', 'black veins, left hand')],
+      ['11/20', '2', T('咳嗽', 'cough')], ['12/13', '13', T('左手出現黑紋，昏迷', 'black veins, left hand; unconscious')], ['1/13', '13', T('左手出現黑紋', 'black veins, left hand')], ['2/13', '13', T('左手、脖子出現黑紋', 'black veins, left hand and neck')]];
+    body.append(el('p', { class: 'dim', text: T('住院紀錄（日期、床號、症狀）。旁邊註記：「隔天轉學。」', 'Admissions (date, bed, symptoms). A note beside some: “Transferred the next day.”') }),
+      el('table', { class: 'ch2-table' }, el('tr', {}, ...[T('日期', 'Date'), T('床號', 'Bed'), T('症狀', 'Symptoms')].map((h) => el('th', { text: h }))), ...ROWS.map((r) => el('tr', {}, ...r.map((c) => el('td', { text: c }))))));
+    const inp = el('input', { inputmode: 'numeric', maxlength: '3', placeholder: '?', class: 'num' }); inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') submit(inp.value.trim()); };
+    body.append(el('p', { text: T('歐文：「他們都睡同一張床……是哪一張？」', 'Owen: “They all slept in the same bed… which one?”') }), el('div', { class: 'row' }, inp, answerBtn(() => submit(inp.value.trim()))));
+  },
+  // Q11：藥櫃的天平鎖——放三瓶，跟抑制劑一樣重
+  Q11(body, { submit }) {
+    const B = [['sleep', T('安眠藥', 'Sleeping draught')], ['pain', T('止痛藥', 'Painkiller')], ['fever', T('退燒藥', 'Fever tonic')]];
+    const pan = []; const show = el('p', { class: 'ch2-pan' });
+    const paint = () => { show.textContent = `${T('右邊的秤盤', 'Right pan')}：${pan.map((id) => B.find((b) => b[0] === id)[1]).join(' ＋ ') || '—'}（${pan.length}／3）`; };
+    paint();
+    body.append(el('p', { class: 'dim', text: T('左邊秤盤上是一瓶「蝕化抑制劑」。右邊要放剛好三瓶，跟它一樣重，藥櫃才會打開。', 'A bottle of “Blight Suppressant” sits on the left pan. Put exactly three bottles on the right to balance it, and the cabinet will open.') }),
+      el('ul', { class: 'hints' }, el('li', { text: T('標籤：兩瓶安眠藥＝一瓶抑制劑＋一瓶止痛藥', 'Label: two sleeping draughts = one suppressant + one painkiller') }), el('li', { text: T('標籤：三瓶止痛藥＝一瓶安眠藥', 'Label: three painkillers = one sleeping draught') }), el('li', { text: T('標籤：兩瓶退燒藥＝一瓶止痛藥', 'Label: two fever tonics = one painkiller') })),
+      show, el('div', { class: 'row wrap' }, ...B.map(([id, name]) => el('button', { class: 'small', text: `＋ ${name}`, onclick: () => { if (pan.length < 3) { pan.push(id); paint(); } } }))),
+      el('div', { class: 'row' }, el('button', { class: 'small', text: T('全部拿下來', 'Clear the pan'), onclick: () => { pan.length = 0; paint(); } }), answerBtn(() => submit(pan.join(',')))));
+  },
+  // Q12：檔案櫃——輸入抽屜號碼
+  Q12(body, { submit }) {
+    const inp = el('input', { inputmode: 'numeric', maxlength: '4', placeholder: '????', class: 'num' }); inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') submit(inp.value.trim()); };
+    body.append(el('p', { class: 'dim', text: T('一整排檔案櫃，每個抽屜都有一個四位數的號碼，從 1880 號排到 1910 號。要打開哪一個？', 'A long row of cabinets; every drawer has a four-digit number, from 1880 to 1910. Which one do you open?') }), el('div', { class: 'row' }, inp, answerBtn(() => submit(inp.value.trim()))));
+  },
+  // Q13：鐵櫃的 4×4 燈格——點亮 6 格（X 光片：每排、每列的格數；床板上的釘子要隊友看）
+  Q13(body, { conn, submit }) {
+    const on = new Set(), cells = []; const grid = el('div', { class: 'ch2-xray' });
+    const head = el('div', { class: 'ch2-xray-wrap' });
+    conn.request({ t: 'peek', pid: 'Q13' }).then((r) => {
+      if (r.t !== 'peek') return; const { row, col } = r.content;
+      grid.append(el('i'), ...col.map((n, c) => el('b', { text: `${c + 1}：${n}` })));
+      for (let rr = 0; rr < 4; rr++) { grid.append(el('b', { text: `${'ABCD'[rr]}：${row[rr]}` })); for (let c = 0; c < 4; c++) { const k = rr * 4 + c; const b = el('button', { class: 'cell', onclick: () => { if (on.has(k)) on.delete(k); else on.add(k); b.classList.toggle('on', on.has(k)); count.textContent = `${on.size}／6`; } }); cells.push(b); grid.append(b); } }
+    });
+    const count = el('span', { text: '0／6' });
+    head.append(grid);
+    body.append(el('p', { class: 'dim', text: T('鐵櫃上貼著一張被撕掉一半的 X 光片：只看得出每一排、每一列各有幾格亮著，看不出是哪幾格。要點亮正確的 6 格。（床板上的釘子在醫務室那邊。）', 'Half an X-ray is pasted on the cabinet: you can tell how many cells are lit in each row and column, but not which. Light the right 6 cells. (The nails in the bed board are back in the infirmary.)') }),
+      head, el('div', { class: 'row' }, count, answerBtn(() => submit([...on]))));
+  },
+  // Q14：轉學同意書——只有一張的簽名是真的
+  Q14(body, { submit }) {
+    const DOCS = [['wynn', T('哈洛德・溫', 'Harold Wynn'), T('藍黑墨水，M 的最後一筆直直往下', 'blue-black ink; the M ends straight down')], ['keel', T('瑪莉・基爾', 'Mary Keel'), T('綠色墨水，M 的最後一筆直直往下', 'green ink; the M ends straight down')],
+      ['liana', T('莉安娜', 'Liana'), T('綠色墨水，M 的最後一筆往上勾', 'green ink; the M ends with an upward hook')], ['green', T('湯瑪斯・葛林', 'Thomas Green'), T('黑色墨水，M 的最後一筆往上勾', 'black ink; the M ends with an upward hook')], ['moore', T('伊蒂絲・摩爾', 'Edith Moore'), T('綠色墨水，M 的最後一筆往下彎', 'green ink; the M curls downward')]];
+    body.append(el('p', { class: 'dim', text: T('五張「轉學同意書」，每張都有校長奧德里克・米爾納的簽名（Aldric Milner）。只有一張是他親手簽的。', 'Five “transfer consent” forms, each signed by Headmaster Aldric Milner. Only one was signed by his own hand.') }),
+      el('div', { class: 'col' }, ...DOCS.map(([id, name, note]) => el('button', { class: 'ch2-doc', onclick: () => submit(id) }, el('b', { text: name }), el('small', { text: note })))));
+  },
+  // Q15：留聲水晶的心跳（長、短）
+  Q15(body, { submit, panel }) {
+    const CODE = ['-.-', '-.', '---', '-..-']; // K N O X（玩家聽到的是心跳；這是畫面上一閃一閃的光）
+    const lamp = el('div', { class: 'ch2-beat' }), seq = el('p', { class: 'ch2-morse' });
+    let stop = false; panel.onClose = () => { stop = true; };
+    const play = async () => {
+      seq.textContent = '';
+      for (const [w, word] of CODE.entries()) { for (const ch of word) { if (stop) return; lamp.classList.add('on'); sfx('step'); seq.textContent += ch === '-' ? '－' : '・'; await new Promise((r) => setTimeout(r, ch === '-' ? 650 : 220)); lamp.classList.remove('on'); await new Promise((r) => setTimeout(r, 260)); } if (w < CODE.length - 1) { seq.textContent += '　／　'; await new Promise((r) => setTimeout(r, 700)); } }
+    };
+    const inp = el('input', { maxlength: '8', placeholder: '????' }); inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') submit(inp.value.trim()); };
+    body.append(el('p', { class: 'dim', text: T('水晶裡沒有說話的聲音，只有心跳。有長有短。', 'No voice in the crystal — only a heartbeat, long and short.') }), lamp, seq,
+      el('button', { class: 'small', text: T('▶ 再聽一次', '▶ Listen again'), onclick: play }), el('div', { class: 'row' }, inp, answerBtn(() => submit(inp.value.trim()))));
+    play();
+  },
+  // Q16：鑰匙牌上的刮痕（只有上半）；影子補完
+  Q16(body, { submit, state }) {
+    if (!state.solved.includes('Q13')) { body.append(el('p', { text: T('鐵櫃還鎖著。', 'The iron cabinet is still locked.') })); return; }
+    const tag = el('div', { class: 'ch2-tag' }, el('span', { class: 'top', text: '1871' }), el('span', { class: 'shadow', text: '1871' }));
+    const inp = el('input', { inputmode: 'numeric', maxlength: '4', placeholder: '????', class: 'num' }); inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') submit(inp.value.trim()); };
+    body.append(el('p', { class: 'dim', text: T('歐文的手指已經僵了，還緊緊握著一把鑰匙。鑰匙牌上被指甲刮出幾道痕跡，只刮了一半。把它舉到燈下……', 'Owen’s fingers have stiffened around a key. Its tag has been scratched with a fingernail — only half-finished. Hold it up to the lamp…') }), tag,
+      el('div', { class: 'row' }, inp, el('button', { class: 'primary small', text: T('打開這個號碼的抽屜', 'Open that drawer'), onclick: () => submit(inp.value.trim()) })));
+  },
+  // C2：西里爾的第二個抉擇
+  C2(body, { submit, state, myChar }) {
+    if (!state.solved.includes('Q16')) { body.append(el('p', { text: T('抽屜鎖著。', 'The drawer is locked.') })); return; }
+    const playersHaveCyril = (state.members ?? []).some((m) => m.char === 'cyril');
+    if (playersHaveCyril && myChar() !== 'cyril') { body.append(el('p', { text: T('西里爾搶先拿起了那份檔案，背對著大家看了很久。', 'Cyril snatches up the file first and reads it for a long time with his back to everyone.') })); return; }
+    body.append(el('p', { text: T('副校長塞巴斯汀・莫瑞的檔案。二十年前，他和諾克斯同一年住進醫務室，症狀一樣。最後一頁蓋著銜尾蛇的印記——銜尾會。', 'Vice-Principal Sebastian Moray’s file. Twenty years ago he was admitted the same year as Knox, with the same symptoms. The last page bears the stamp of a serpent eating its tail — the Ouroboros Society.') }),
+      el('p', { class: 'dim', text: playersHaveCyril ? T('（你是西里爾。這是你父親。）', '(You are Cyril. This is your father.)') : T('（電腦控制的西里爾看著你，等你替他決定。）', '(The computer-controlled Cyril looks at you, waiting for you to decide for him.)') }),
+      el('div', { class: 'row' }, el('button', { text: T('告訴大家', 'Tell everyone'), onclick: () => submit('tell') }), el('button', { text: T('撕掉那一頁', 'Tear out the page'), onclick: () => submit('tear') })));
+  },
+
 };

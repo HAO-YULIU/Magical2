@@ -9,7 +9,7 @@ import { DurableObject } from 'cloudflare:workers';
 import { PUZZLES, HOUSES, judge, hint, rescueContent, corridorLoop, corridorFocus, morseHours, bookPage, brailleDoor, rng, cryingDoll } from './judge.mjs';
 import { ACT4 } from '../data/puzzles/ch1.mjs';
 import { CH2_GATES, CH2_SEG_END, GREEN_SPOT_NAMES } from '../data/puzzles/ch2.mjs';
-import { circledChar, greenSpots } from './judge.mjs';
+import { circledChar, greenSpots, xrayPuzzle } from './judge.mjs';
 
 export const CHARS = { yuexi: 'grimoire', vaughn: 'belmont', elora: 'eldrin', cyril: 'ouroboros' };
 const MARKS = ['here', 'danger', 'help'];
@@ -17,7 +17,7 @@ const MAX = { solo: 1, multi: 4 };
 const WRONG_COOLDOWN = 3000; // 答錯後同一題要等多久（毫秒）
 // 第一章的段落（docs/07-system.md 第 5 節）。解開「結尾題」就進到下一段
 export const SEGMENTS = ['prologue', 'act1', 'act2', 'act3a', 'act3b', 'act3c', 'act4', 'epilogue'];
-const SEG_END = { ...CH2_SEG_END, P10: 'act3a', P29: 'epilogue' }; // 第二章：序幕、第一幕換成第二章的（ch2.mjs）
+const SEG_END = { ...CH2_SEG_END, P29: 'epilogue' }; // 第二章：序幕、第一幕換成第二章的（ch2.mjs）
 const ACT4_PUZZLES = ['P26', 'P27', 'P28', 'P29', 'P32'];
 const RESCUE_IDS = ['R1', 'R2', 'R3', 'R4'], SELF_IDS = ['S1', 'S2', 'S3', 'S4'];
 // 第三幕：這一段的題目全部解開，才進到下一段（P22 是西里爾的抉擇，不算）
@@ -283,7 +283,7 @@ export class Room extends DurableObject {
         const devSolve = !!msg.devSolve && isDev; // 開發者：直接解開（不判斷答案）
         if (!devSolve && def.gather && r.order.some((u) => r.members[u].online && r.members[u].zone !== def.gather)) return err('gather_first');
         if (!devSolve && def.needs && !r.items?.[def.needs]) return err('need_item');
-        if (pid === 'P22' && me.char !== 'cyril') return err('not_yours'); // 西里爾的抉擇只有扮演西里爾的人能做
+        if ((pid === 'P22' || pid === 'C2') && me.char !== 'cyril' && !(pid === 'C2' && !r.order.some((u) => r.members[u].char === 'cyril'))) return err('not_yours'); // 西里爾的抉擇：扮演西里爾的人做；沒人扮演時誰都可以（替電腦控制的西里爾決定） // 西里爾的抉擇只有扮演西里爾的人能做
         const coolKey = `${pid}:${uid}`;
         if ((r.cool[coolKey] ?? 0) > Date.now()) return reply({ t: 'error', error: 'cooldown', wait: r.cool[coolKey] - Date.now() });
         const state = (r.puz[pid] ??= {});
@@ -342,6 +342,7 @@ export class Room extends DurableObject {
         const st = (r.puz[pid] ??= {});
         if (def.kind === 'hours') return reply({ t: 'peek', pid, content: { morse: morseHours(this.aiHouses()) } });
         if (def.kind === 'rollcircle') { const c = circledChar(r.seed, r.order.map((u) => r.members[u].char).filter(Boolean)); return reply({ t: 'peek', pid, content: { house: CHARS[c] } }); } // Q04：空白紅圈的學院顏色
+        if (def.kind === 'xray') { const x = xrayPuzzle(r.seed); return reply({ t: 'peek', pid, content: { nails: x.nails, row: x.row, col: x.col } }); } // Q13：兩邊的線索（不含答案）
         if (def.kind === 'spots') return reply({ t: 'peek', pid, content: { spots: greenSpots(r.seed) } }); // Q06：哪三個地方要畫成不對勁
         if (pid === 'P14') { const b = Math.trunc(+msg.value?.book), p = Math.trunc(+msg.value?.page); if (!(b >= 1 && b <= 12 && p >= 1 && p <= 120)) return err('bad_value'); return reply({ t: 'peek', pid, content: { words: bookPage(r.seed, r.lang, b, p) } }); }
         if (pid === 'P12') { if (!r.items?.lantern) return err('need_item'); return reply({ t: 'peek', pid, content: { shadows: def.ans.split(',') } }); } // 站在標記上舉燈才看得到影子
@@ -405,7 +406,8 @@ export class Room extends DurableObject {
         let focus;
         if (PUZZLES[pid].kind === 'corridor') { const st = r.puz[pid] ?? {}; focus = corridorFocus(corridorLoop(r.seed, st.attempt ?? 0, st.n ?? 0, { rate: PUZZLES[pid].rate, skip: r.mode === 'solo' ? [] : this.aiHouses() }), r.lang); }
         const spot = pid === 'Q06' ? GREEN_SPOT_NAMES[greenSpots(r.seed)[0]]?.[r.lang === 'en' ? 'en' : 'zh'] : undefined;
-        const text = hint(pid, n, r.lang, { focus, spot });
+        const cells = pid === 'Q13' ? xrayPuzzle(r.seed).ans.slice(0, 3).map((c) => `${'ABCD'[c >> 2]}${(c & 3) + 1}`).join('、') : undefined;
+        const text = hint(pid, n, r.lang, { focus, spot, cells });
         (r.hints[pid] ??= []).push(text);
         await this.save();
         this.broadcast({ t: 'hint', pid, n, text, by: uid }, (u) => u !== uid);

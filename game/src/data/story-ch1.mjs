@@ -81,35 +81,49 @@ export const SCRIPT = {
   ],
   'mirror': [[null, '字是反著寫的……像是有人從鏡子的另一邊，用手指寫給你看。', 'The letters are backwards… as if someone wrote them with a finger from the other side of the glass.']],
   // ---- 第二幕：肖像畫長廊 ----
+  // ===== 第二章 第二幕：醫務室與舊檔案室 =====
   'segment:act2': [
-    [null, '北翼的門後是一條窄窄的走廊。兩側掛著六幅女學生的畫像，盡頭的門上了鎖。', 'Beyond the North Wing door is a narrow corridor. Six portraits of girls line the walls; the door at the end is locked.'],
-    ['yuexi', '每一幅下面都有名牌……「未畢業」？六個都是。', 'Each one has a name plate… “Did not graduate”? All six of them.'],
-    ['cyril', '門上是五格的字母鎖。還有那盞油燈……窗外好像要打雷了。', 'Five letter wheels on the door. And that oil lamp… sounds like a storm is coming.'],
+    [null, '醫務室。一排白色的病床，空氣裡是藥草和消毒水的味道。', 'The infirmary. A row of white beds; the air smells of herbs and carbolic.'],
+    ['owen', '這麼晚了還來看病？……喔，是你們。諾克斯教授剛剛也來過，問我去年的事。', 'Here for a remedy at this hour? …Oh. It’s you lot. Professor Knox was just here, asking about last year.'],
+    ['elora', '去年的什麼事？', 'About what, last year?'],
+    ['owen', '有幾個學生，半夜被送來。第二天就「轉學」了。……紀錄在我桌上。我什麼都沒說喔。', 'Some students were brought in at night. Next morning they’d “transferred”. …The records are on my desk. I didn’t say a thing.'],
+    [null, '（調查醫務室：校醫的桌子、病床、藥櫃、留聲水晶。）', '(Search the infirmary: the matron’s desk, the beds, the medicine cabinet, the echo crystal.)'],
   ],
-  'solved:P30': [
-    [null, '最後一格轉到位，鎖喀的一聲開了。門後是一條更長的走廊，牆上掛滿了畫像。', 'The last wheel clicks into place and the lock gives. Beyond the door, a much longer corridor, hung wall to wall with portraits.'],
-    ['elora', '（盯著那五個字母，手在發抖）……走吧。', '(staring at the five letters, her hands shaking) …Let’s go.'],
+  'solved:Q10': [
+    ['owen', '……13 號床。我們醫務室，從來沒有 13 號床。', '…Bed 13. This infirmary has never had a bed 13.'],
+    [null, '歐文掀開最裡面那張床的床墊，底下是一扇暗門。冷風從下面吹上來。', 'Owen lifts the mattress of the last bed. Beneath it is a trapdoor. A cold draught breathes up from below.'],
+    ['owen', '這裡以前不是醫務室的一部分。……我去拿燈，你們先別下去。', 'This was never part of the infirmary. …I’ll fetch a lamp. Don’t go down yet.'],
+    [null, '歐文走下了暗門。', 'Owen goes down through the trapdoor.'],
   ],
-  'enter:corridor': [
-    [null, '燭火輕輕搖晃。你有種奇怪的感覺：這條走廊，好像走不完。', 'The candles flicker. You have the strangest feeling that this corridor never ends.'],
-    [null, '（找異常：每一趟走廊，有東西不一樣就回頭，沒有就推開盡頭的門。連續判斷正確 8 次才能走出去，錯一次就從頭來。多人時要投票：推門＝往前、退回北翼走廊＝回頭，過半數同意才算數。）', '(Spot the anomaly: if anything on this walk is different, turn back; if not, push open the door at the end. Get it right 8 times in a row to escape — one mistake and you start over. With friends, it’s a vote: pushing the door votes to go on, walking back votes to turn back; a majority decides.)'],
+  'solved:Q11': [[null, '藥櫃打開了。架子上夾著歐文的紙條：「如果我沒回來，去檔案室最裡面那一排。」', 'The cabinet opens. A note from Owen is tucked on the shelf: “If I don’t come back, go to the last row of the archive.”']],
+  'solved:Q15': [
+    ['yuexi', '……K、N、O、X。', '…K. N. O. X.'],
+    [null, '病人名冊上，諾克斯也在裡面。二十年前，左手出現黑紋。', 'Knox is in the patient register too. Twenty years ago: black veins on the left hand.'],
+    ['elora', '（把左手藏到背後。）', '(Hides her left hand behind her back.)'],
   ],
-  'corridor:liana': [['elora', '……姊姊？', '…Sister?'], ['cyril', '（看了艾洛拉一眼，什麼都沒說）', '(glances at Elora and says nothing)']],
-  'solved:P09': [
-    [null, '這一次，門後不再是長廊的起點。', 'This time, the door does not lead back to the start.'],
-    [null, '一個圓形的房間。正前方掛著一幅巨大的畫像：創辦人艾德蒙・米爾納，他的手指向某個方向。', 'A round chamber. Before you hangs a vast portrait: the founder, Edmund Milner, his finger pointing somewhere.'],
+  'enter:archive': [
+    [null, '舊檔案室。一排排高大的檔案櫃一直延伸到黑暗裡，裡面是一百年的病歷。', 'The old archive. Rows of towering cabinets march off into the dark, holding a hundred years of patients.'],
+    [null, '遠處有翻紙的聲音。……歐文？', 'Somewhere far off, paper is being turned. …Owen?'],
+    [null, '沒有人回答。抽屜一個接一個，自己關上了。', 'No one answers. One by one, the drawers slide shut on their own.'],
   ],
-  'enter:founder': [
-    [null, '兩側牆上是歷任校長的畫像。創辦人畫像下的銘牌被刮花了，看不出他在位幾年。', 'The headmasters line both walls. The plaque beneath the founder has been scratched; you can’t read how long he served.'],
-    [null, '畫像下方有一道鎖：一個可以轉動的手臂，和四格數字。', 'Below the portrait is a lock: an arm that can be turned, and four number wheels.'],
+  'solved:Q12': [
+    [null, '莉安娜的病歷：「黑紋從左手開始。」——跟艾洛拉一樣。抽屜裡還夾著莉安娜的筆記第 5 頁。', 'Liana’s file: “The black veins begin in the left hand.” — just like Elora’s. Liana’s notes, page 5, are tucked inside.'],
+    ['elora', '……姊姊。', '…Sister.'],
   ],
-  'snuff': [[null, '燭火熄滅了。黑暗裡，所有畫像的眼睛都亮了起來——全都看著同一個方向。', 'The candles die. In the dark, every portrait’s eyes begin to glow — all of them looking the same way.']],
-  'solved:P10': [
-    [null, '創辦人的手臂停在那個方向，喀的一聲，畫像後面的門打開了。冷風從底下吹上來。', 'The founder’s arm settles into place with a click, and a door opens behind the portrait. Cold air rises from below.'],
-    ['elora', '……就是這裡。往下。', '…This is it. Down.'],
+  'solved:Q13': [
+    [null, '鐵櫃的門彈開了。', 'The iron cabinet springs open.'],
+    [null, '歐文倒在裡面。他的眼睛睜得很大，喉嚨被撕開，胸口塞滿了黑色的根。血從櫃子裡一直流到你的腳邊。', 'Owen is crammed inside. His eyes are wide open; his throat has been torn out, and his chest is stuffed with black roots. Blood runs from the cabinet all the way to your feet.'],
+    ['vaughn', '……他、他剛剛還在跟我們說話——', '…He — he was talking to us just now —'],
+    ['cyril', '別叫。不管是誰做的，它可能還在這裡。', 'Don’t shout. Whoever did this may still be down here.'],
+    [null, '歐文的手裡，緊緊握著一把鑰匙。', 'Clutched in Owen’s hand is a key.'],
   ],
-
-  // ---- 第三幕：沉眠圖書館 ----
+  'solved:Q14': [
+    [null, '真的那一張，是莉安娜的轉學同意書。日期是她失蹤的前一天。校長親手簽的。', 'The genuine one is Liana’s transfer form, dated the day before she vanished — signed by the headmaster himself.'],
+    ['elora', '校長……知道？', 'The headmaster… knew?'],
+    [null, '同意書背面夾著莉安娜的筆記第 6 頁。', 'Page 6 of Liana’s notes is folded behind it.'],
+  ],
+  'solved:Q16': [[null, '1871 號抽屜。裡面只有一份檔案，封面寫著：塞巴斯汀・莫瑞。', 'Drawer 1871. It holds a single file. On the cover: Sebastian Moray.'], ['cyril', '……', '…']],
+  'solved:C2': [[null, '西里爾做了決定。', 'Cyril has made his choice.']],
   'segment:act3a': [
     [null, '你們沿著北翼樓梯一路往下。空氣越來越冷，牆上的火把一盞接一盞熄滅。', 'You follow the North Wing stairs down and down. The air grows colder; the torches go out one by one.'],
     ['vaughn', '這裡……是圖書館？', 'Is this… a library?'],

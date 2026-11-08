@@ -64,7 +64,7 @@ const numberInput = (submit, ph = '') => {
 };
 
 // 沒有提示的題目（西里爾的抉擇）、只是看資料的畫面（不放提示）
-const NO_HINTS = new Set(['P22']);
+const NO_HINTS = new Set(['P22', 'C2']);
 const INFO_PANELS = new Set(['roster', 'notice', 'trigrams', 'sketch', 'crystalball', 'brailletable']);
 const RUNES6 = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ'];
 const S3_RUNES = ['ᛒ', 'ᚨ', 'ᚾ', 'ᛁ', 'ᛊ', 'ᚺ'], S3_LETTERS = ['B', 'A', 'N', 'I', 'S', 'H']; // S3 自救：數字 1～6 對應的符文（對角線拼出 BANISH）

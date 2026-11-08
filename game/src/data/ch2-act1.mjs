@@ -103,3 +103,49 @@ export const CH2_THINGS = [ // 外觀全部由 world/ch2scene.mjs 畫（hidden�
     text: L('甲組每 4 分噴一次、乙組每 6 分、丙組每 9 分、丁組每 12 分。今晚四組一起噴的時間：8 點整。旁邊是園藝筆記：「四組同時停下的那一刻，它會縮回土裡。」', 'Group A sprays every 4 minutes, B every 6, C every 9, D every 12. All four sprayed together tonight at 8:00 sharp. A gardener’s note beside it: “At the moment all four stop together, it shrinks back into the soil.”') },
   { id: 'q09_lever', room: 'greenhouse', kind: 'puzzle', puzzle: 'Q09', x: 51, z: -11.6, size: [1.6, 1.6, 0.6], solid: true, label: L('後門的拉桿（黑色植物的根纏在鐵柵上）', 'The back-door lever (black roots coil round the bars)') },
 ].map((x) => ({ hidden: true, ...x }));
+
+// ================= 第二幕：醫務室（L1）、舊檔案室（L2，地下） =================
+export const CH2_A2_ROOMS = [
+  { id: 'infirmary', name: L('醫務室', 'The Infirmary'), x: [62, 74], z: [-9, 9], h: 5, floor: 'stone', light: '#c8d0c0' },
+  { id: 'archive', name: L('舊檔案室', 'The Old Archive'), x: [62, 82], z: [30, 50], h: 6, floor: 'stone', light: '#8a7a5a' },
+];
+export const CH2_A2_SPAWNS = { act2: { x: 68, z: 7.8, yaw: 0 }, archive: { x: 64, z: 48, yaw: Math.PI * 0.75 }, infirmary_back: { x: 69.5, z: -6.2, yaw: Math.PI } };
+// 病床 1～8（醫務室西邊 4 張、東邊 4 張）
+export const BEDS = [[63.4, -6], [63.4, -2], [63.4, 2], [63.4, 6], [72.6, -6], [72.6, -2], [72.6, 2], [72.6, 6]];
+// 檔案櫃（舊檔案室：一排排，抽屜編號＝入學年份＋學院時辰）；有名字的抽屜給玩家對照規則
+export const ARCHIVE_ROWS = [34, 38, 42, 46];
+export const LABELED_DRAWERS = [
+  L('哈洛德・溫（1886 年入學，貝爾蒙特）→ 1895 號', 'Harold Wynn (enrolled 1886, Belmont) → No. 1895'),
+  L('瑪莉・基爾（1887 年入學，格里莫瓦）→ 1898 號', 'Mary Keel (enrolled 1887, Grimoire) → No. 1898'),
+  L('湯瑪斯・葛林（1885 年入學，烏洛波斯）→ 1888 號', 'Thomas Green (enrolled 1885, Ouroboros) → No. 1888'),
+];
+export const ENROL_PAGE = L('入學名冊（撕下來的一頁）：「……1888 年：莉安娜（艾爾德林）……」', 'A torn page from the enrolment register: “…1888: Liana (Eldrin)…”');
+
+const A2 = [
+  // 醫務室
+  { id: 'owen', room: 'infirmary', kind: 'prop', x: 68, z: -7.3, size: [0.8, 1.8, 0.8], solid: true, label: L('校醫歐文', 'Matron Owen'),
+    text: L('歐文：「去年有幾個學生半夜被送來，第二天就『轉學』了。我只記得……他們都睡同一張床。紀錄在我桌上，你們自己看吧。」', 'Owen: “Last year a few students were brought in at night, and the next day they had ‘transferred’. All I remember is… they all slept in the same bed. The records are on my desk — see for yourselves.”') },
+  { id: 'q10_records', room: 'infirmary', kind: 'puzzle', puzzle: 'Q10', x: 66, z: -7.6, size: [1.4, 0.9, 0.8], solid: true, label: L('校醫的桌子：去年的住院紀錄', 'The matron’s desk: last year’s admissions') },
+  ...BEDS.map(([x, z], i) => ({ id: `bed${i + 1}`, room: 'infirmary', kind: 'prop', x, z, size: [1.0, 0.7, 2.0], solid: true, label: L(`${i + 1} 號床`, `Bed ${i + 1}`),
+    text: L(`床頭的牌子：${i + 1} 號。床單洗得很白，有一塊洗不掉的黃斑。`, `The sign at the head reads ${i + 1}. The sheets are bleached white, with one yellow stain that never washed out.`) })),
+  { id: 'q11_cabinet', room: 'infirmary', kind: 'puzzle', puzzle: 'Q11', x: 73.6, z: -8.4, size: [0.6, 2, 1.4], solid: true, label: L('藥櫃（天平鎖）', 'The medicine cabinet (a balance lock)') },
+  { id: 'q15_crystal', room: 'infirmary', kind: 'puzzle', puzzle: 'Q15', x: 67, z: -7.6, size: [0.4, 0.5, 0.4], y: 0.9, solid: false, label: L('桌上的留聲水晶（只有心跳聲）', 'An echo crystal on the desk (only a heartbeat)') },
+  { id: 'medbook', room: 'infirmary', kind: 'prop', x: 65, z: -7.6, size: [0.4, 0.2, 0.3], y: 0.9, solid: false, label: L('醫學書（翻開的那一頁）', 'A medical book (open)'),
+    text: L('「脈搏的記錄方式：長的一拍記作『－』，短的一拍記作『・』。」旁邊有人用鉛筆抄了一張字母表：A ・－　K －・－　N －・　O －－－　X －・・－ ……', '“Recording a pulse: a long beat is written ‘–’, a short beat ‘·’.” Beside it someone has pencilled a table: A ·–  K –·–  N –·  O –––  X –··– …') },
+  { id: 'patients', room: 'infirmary', kind: 'prop', x: 73.6, z: -4.6, size: [0.4, 1, 0.8], y: 0.5, solid: false, label: L('病人名冊', 'The patient register'),
+    text: L('一頁一頁翻過去……「KNOX，薇拉。二十年前。症狀：左手出現黑紋。處置：——（被劃掉了）」', 'You leaf through it… “KNOX, Vera. Twenty years ago. Symptoms: black veins on the left hand. Treatment: —— (struck out).”') },
+  { id: 'q13_bedboard', room: 'infirmary', kind: 'xraynails', x: 70.6, z: -4, size: [1.0, 0.6, 1.0], solid: false, label: L('13 號床的床板（暗門下面）', 'The board of bed 13 (under the trapdoor)') },
+  { id: 'trapdoor', room: 'infirmary', kind: 'goto', to: CH2_A2_SPAWNS.archive, needs: 'Q10', x: 69.5, z: -4, size: [1.0, 0.2, 1.0], solid: false, label: L('暗門：往下走', 'The trapdoor: go down') },
+  // 舊檔案室
+  { id: 'archive_up', room: 'archive', kind: 'goto', to: CH2_A2_SPAWNS.infirmary_back, x: 63, z: 49, size: [1, 2.4, 1], solid: false, label: L('樓梯：回醫務室', 'The stairs: back up to the infirmary') },
+  { id: 'enrol', room: 'archive', kind: 'prop', x: 64.6, z: 44, size: [0.8, 1, 0.6], solid: false, label: L('地上一張撕下來的紙', 'A torn sheet on the floor'), text: ENROL_PAGE },
+  { id: 'rule', room: 'archive', kind: 'prop', x: 62.4, z: 40, size: [0.3, 1.2, 1], y: 1, solid: false, label: L('牆上的說明牌', 'The sign on the wall'),
+    text: L('「依入學與學院歸檔。」下面幾個抽屜貼著名字：', '“Filed by enrolment and house.” Below, a few drawers carry names:') },
+  ...LABELED_DRAWERS.map((t, i) => ({ id: `labeled${i}`, room: 'archive', kind: 'prop', x: 66 + i * 4, z: 34, size: [1, 2.2, 0.6], solid: true, label: L('有名字的抽屜', 'A labelled drawer'), text: t })),
+  { id: 'q12_drawers', room: 'archive', kind: 'puzzle', puzzle: 'Q12', x: 74, z: 38, size: [4, 2.2, 0.6], solid: true, label: L('一整排檔案櫃：打開某個號碼的抽屜', 'A row of filing cabinets: open a numbered drawer') },
+  { id: 'q13_xray', room: 'archive', kind: 'puzzle', puzzle: 'Q13', x: 80.6, z: 46, size: [0.6, 2.2, 1.4], solid: true, label: L('最裡面的鐵櫃（4×4 的燈格鎖）', 'The iron cabinet at the back (a 4×4 lamp lock)') },
+  { id: 'q14_papers', room: 'archive', kind: 'puzzle', puzzle: 'Q14', x: 78, z: 44.4, size: [1.2, 0.3, 1.2], solid: false, label: L('散落一地的轉學同意書', 'Transfer forms scattered on the floor') },
+  { id: 'q16_key', room: 'archive', kind: 'puzzle', puzzle: 'Q16', x: 78.5, z: 46.8, size: [0.8, 0.4, 0.8], solid: false, label: L('歐文手裡握著的鑰匙', 'The key in Owen’s hand') },
+  { id: 'c2_page', room: 'archive', kind: 'puzzle', puzzle: 'C2', x: 74, z: 42.4, size: [0.8, 1, 0.6], solid: false, label: L('1871 號抽屜：副校長莫瑞的檔案', 'Drawer 1871: Vice-Principal Moray’s file') },
+];
+CH2_THINGS.push(...A2.map((x) => ({ hidden: true, ...x })));

@@ -2,9 +2,11 @@
 // 房間的牆、地板由 greybox 依 data/world-ch1.mjs 的 ROOMS 自動蓋；這裡只放擺設。美術在 art/ch2/。
 import * as THREE from 'three';
 import { jackOLantern, tickPumpkins } from '../art/ch2/halloween.mjs';
-import { drape, rollBook, blackPlant } from '../art/ch2/ch2props.mjs';
+import { drape, rollBook, blackPlant, hospitalBed, filingCabinet } from '../art/ch2/ch2props.mjs';
+import { loadCharacter } from '../art/characters.mjs';
+import { buildVictim, bloodPool, bloodTrail } from '../art/gore.mjs';
 import { cauldron, blackboard, ingredientShelf, sprinklerRig } from '../art/ch2/ch2rooms.mjs';
-import { PUMPKIN_GRID, PUMPKIN_AT, GREEN_SPOT_AT } from '../data/ch2-act1.mjs';
+import { PUMPKIN_GRID, PUMPKIN_AT, GREEN_SPOT_AT, BEDS, ARCHIVE_ROWS } from '../data/ch2-act1.mjs';
 
 // Q02：照格子畫指定的眼睛和嘴巴（貼圖的 u＝0.25 是正前方）
 function faceTex(eye, mouth, glow) {
@@ -106,6 +108,22 @@ export function createCh2Scene(scene, conn) {
   let staring = 0;
   const stare = () => { staring = 1.6; };
 
+  // ---- 第二幕：醫務室（x 62～74、z -9～9）----
+  BEDS.forEach(([x, z], i) => put(hospitalBed({ bloody: i === 5 }), x, z, x < 68 ? Math.PI / 2 : -Math.PI / 2));
+  const desk2 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.85, 0.8), new THREE.MeshStandardMaterial({ color: '#5a4a3a', roughness: 0.8 })); put(desk2, 66, -7.6, 0, 0.425);
+  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.12), new THREE.MeshStandardMaterial({ color: '#c8a0ff', emissive: '#6a3aaa', emissiveIntensity: 0.8, roughness: 0.1 })); put(crystal, 67, -7.6, 0, 1.0);
+  const medcab = new THREE.Mesh(new THREE.BoxGeometry(0.6, 2, 1.4), new THREE.MeshStandardMaterial({ color: '#e8e8e0', roughness: 0.5 })); put(medcab, 73.65, -8.4, 0, 1);
+  const trap = new THREE.Mesh(new THREE.BoxGeometry(1, 0.05, 1), new THREE.MeshStandardMaterial({ color: '#2a1e14', roughness: 0.9 })); put(trap, 69.5, -4, 0, 0.03);
+  // 校醫歐文（活著的時候）：赫爾嘉夫人的模型換成白色制服
+  let owen = null;
+  loadCharacter('helga').then((c) => { owen = c.root; owen.traverse((o) => { if (o.isMesh) { o.material = [o.material].flat().map((m) => { const n = m.clone(); if (/robe|dress|cloth|coat/i.test(n.name)) n.color?.set('#e8e4da'); return n; }); if (o.material.length === 1) o.material = o.material[0]; } }); put(owen, 68, -7.3, 0); }).catch(() => {});
+  // ---- 第二幕：舊檔案室（x 62～82、z 30～50，地下）----
+  for (const z of ARCHIVE_ROWS) for (let k = 0; k < 6; k++) put(filingCabinet({ drawers: 5, open: (k + z) % 7 === 0 ? 2 : -1, height: 2.4 }), 66 + k * 2.2, z, 0);
+  for (let i = 0; i < 8; i++) { const sheet = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.3), new THREE.MeshStandardMaterial({ color: '#e0d8c0', roughness: 0.9, side: THREE.DoubleSide })); sheet.rotation.x = -Math.PI / 2; sheet.rotation.z = Math.random() * 3; put(sheet, 77 + Math.random() * 2, 43.5 + Math.random() * 2, 0, 0.02); }
+  const iron = new THREE.Mesh(new THREE.BoxGeometry(0.7, 2.2, 1.4), new THREE.MeshStandardMaterial({ color: '#3a3a40', metalness: 0.7, roughness: 0.5 })); put(iron, 80.6, 46, 0, 1.1);
+  let corpse = false;
+  const showCorpse = () => { if (corpse) return; corpse = true; buildVictim(root, 78.6, 46.4, [-1, 0], { seed: 77, model: 'helga', robe: '#d8d0c0' }).catch(() => {}); bloodTrail(root, { x: 80, z: 46.2 }, { x: 74, z: 45 }, { width: 0.8, seed: 78, hands: 2 }); bloodPool(root, 79.6, 46.3, 1.0, { seed: 79 }); };
+
   // 每一格：燭光、大釜冒泡、找錯時植物抖一下
   let last = performance.now(), fetched = false;
   (function loop(now) {
@@ -117,6 +135,8 @@ export function createCh2Scene(scene, conn) {
 
   return {
     mark, stare,
+    hideOwen() { if (owen) owen.visible = false; }, // 歐文下去暗門之後就不在醫務室了
+    showCorpse, // Q13 打開鐵櫃之後
     // 第一幕開始時：問伺服器溫室的異常（畫出來）
     async enterAct1() { if (fetched) return; fetched = true; const r = await conn.request({ t: 'peek', pid: 'Q06' }); if (r.t === 'peek') applyAnomalies(r.content.spots); },
   };

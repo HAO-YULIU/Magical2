@@ -141,26 +141,17 @@ test('多人：加入、選角色、準備、開始、同步、聊天、作答',
   for (const [pid, v] of [['Q03', 'mandrake,shriek,serpent'], ['Q07', 'done'], ['Q08', 'blackroot,thirteen,hername'], ['Q09', '836']]) assert.equal((await b.request({ t: 'answer', pid, value: v })).solved, true, pid);
   assert.equal((await b.wait((m) => m.t === 'state' && m.segment === 'act2')).segment, 'act2');
 
-  // 第二幕：異常長廊——誰做決定都算，結果告訴全隊；連續對 8 趟才過；再解開 P10 進到第三幕
-  let peek = await a.request({ t: 'peek', pid: 'P09' });
-  assert.equal(peek.next, null); // 第一趟一定正常
-  // 多人要投票：兩個人都要選一樣的才算數
-  const split = await a.request({ t: 'answer', pid: 'P09', value: { loop: peek.loop, choice: 'back' } });
-  assert.equal(split.pending, true); assert.equal(split.need, 2);
-  assert.equal((await b.wait((m) => m.t === 'vote')).back, 1);
-  for (let i = 0; i < 8; i++) {
-    const who = i % 2 ? a : b, other = i % 2 ? b : a;
-    const choice = peek.next ? 'back' : 'forward';
-    const first = await other.request({ t: 'answer', pid: 'P09', value: { loop: peek.loop, choice } });
-    assert.equal(first.pending, true);
-    const res = await who.request({ t: 'answer', pid: 'P09', value: { loop: peek.loop, choice } });
-    const told = await other.wait((m) => m.t === 'corridor' && m.by === who.uid && m.streak === i + 1);
-    assert.equal(told.right, true);
-    peek = { loop: res.reply.loop, next: res.reply.next };
-    if (i === 7) assert.equal(res.solved, true);
-  }
-  assert.equal((await a.request({ t: 'answer', pid: 'P30', value: 'liana' })).solved, true); // 閃電中的她：大小寫都可以
-  assert.equal((await a.request({ t: 'answer', pid: 'P10', value: 'NW|1626' })).solved, true);
+  // 第二幕（第二章）：醫務室與舊檔案室；Q13 雙人對照（伺服器出題，peek 不含答案）；C2 沒人扮演西里爾時誰都可以替他決定
+  for (const [pid, v] of [['Q10', '13'], ['Q11', 'pain,sleep,pain'], ['Q12', '1896'], ['Q14', 'liana'], ['Q15', 'knox']]) assert.equal((await a.request({ t: 'answer', pid, value: v })).solved, true, pid);
+  const pk13 = await b.request({ t: 'peek', pid: 'Q13' });
+  assert.equal(pk13.content.nails.length, 10); assert.equal(pk13.content.ans, undefined);
+  assert.equal(pk13.content.row.reduce((x, y) => x + y, 0), 6);
+  const combos = (arr, k) => (k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map((c) => [x, ...c])));
+  const fit = combos(pk13.content.nails, 6).filter((c) => [0, 1, 2, 3].every((r) => c.filter((x) => x >> 2 === r).length === pk13.content.row[r]) && [0, 1, 2, 3].every((k) => c.filter((x) => (x & 3) === k).length === pk13.content.col[k]));
+  assert.equal(fit.length, 1); // 只有一組解
+  assert.equal((await b.request({ t: 'answer', pid: 'Q13', value: fit[0] })).solved, true);
+  assert.equal((await b.request({ t: 'answer', pid: 'C2', value: 'tear' })).solved, true); // 房間裡沒人扮演西里爾
+  assert.equal((await b.request({ t: 'answer', pid: 'Q16', value: '1871' })).solved, true);
   assert.equal((await b.wait((m) => m.t === 'state' && m.segment === 'act3a')).segment, 'act3a');
   assert.equal((await b.request({ t: 'answer', pid: 'Q05', value: 'moonwort,batwing,silver' })).error, 'already_solved');
 
@@ -188,8 +179,6 @@ test('單人：只能一個人，英文謎題', async () => {
   const info = await (await fetch(`${base}/api/rooms/${code}`)).json();
   assert.equal(info.max, 1);
   assert.equal((await p.request({ t: 'answer', pid: 'P14', value: 'THE BELL LIES IN THE WELL' })).solved, true);
-  const peek = await p.request({ t: 'peek', pid: 'P09' });
-  assert.equal(peek.loop, 0); assert.equal(peek.next, null);
   // P15 錄音的字幕：轉盤調對（反轉＋0.5 倍）才給；調錯沒有
   assert.equal((await p.request({ t: 'peek', pid: 'P15', value: { rev: true, speed: 0.5 } })).content.lines.length, 5);
   assert.equal((await p.request({ t: 'peek', pid: 'P15', value: { rev: false, speed: 0.5 } })).content.lines, null);
@@ -396,13 +385,11 @@ test('整章：單人從序幕玩到尾聲，存檔記下結果，可以回來�
   for (const [pid, v] of [['Q03', 'mandrake,shriek,serpent'], ['Q05', 'moonwort,batwing,silver'], ['Q07', 'done'], ['Q08', 'blackroot,thirteen,hername'], ['Q09', '836']]) await ans(pid, v);
   await ans('Q04', (await p.request({ t: 'peek', pid: 'Q04' })).content.house === 'grimoire' ? '12' : 'x');
   await ans('Q06', (await p.request({ t: 'peek', pid: 'Q06' })).content.spots); await seg('act2');
-  // 第二幕：長廊（有異常就回頭）
-  for (let i = 0; i < 40; i++) {
-    const pk = await p.request({ t: 'peek', pid: 'P09' });
-    const r = await p.request({ t: 'answer', pid: 'P09', value: { loop: pk.loop, choice: pk.next ? 'back' : 'forward' } });
-    if (r.solved) break;
-  }
-  await ans('P30', 'LIANA'); await ans('P10', 'NW|1626'); await seg('act3a');
+  // 第二幕（第二章）：醫務室與舊檔案室
+  for (const [pid, v] of [['Q10', '13'], ['Q11', 'sleep,pain,pain'], ['Q12', '1896'], ['Q14', 'liana'], ['Q15', 'KNOX']]) await ans(pid, v);
+  { const c = (await p.request({ t: 'peek', pid: 'Q13' })).content; const combos = (arr, k) => (k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map((y) => [x, ...y])));
+    await ans('Q13', combos(c.nails, 6).find((cc) => [0, 1, 2, 3].every((r) => cc.filter((x) => x >> 2 === r).length === c.row[r]) && [0, 1, 2, 3].every((k) => cc.filter((x) => (x & 3) === k).length === c.col[k]))); }
+  await ans('Q16', '1871'); await seg('act3a');
   // 第三幕
   await ans('P11', '257'); await p.request({ t: 'collect', item: 'note1' }); await p.request({ t: 'collect', item: 'note2' });
   for (const [pid, v] of [['P12', 'wind,fire,earth,water'], ['P13', 'exit'], ['P14', '鐘在井底']]) await ans(pid, v);

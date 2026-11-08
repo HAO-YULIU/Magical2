@@ -4,7 +4,7 @@
 
 import { LIB_ROOMS, LIB_DOORS, LIB_THINGS, LIB_SPAWNS } from './library-ch1.mjs';
 import { A4_ROOMS, A4_DOORS, A4_THINGS, A4_SPAWN } from './act4-ch1.mjs';
-import { CH2_ROOMS, CH2_DOORS, CH2_THINGS, CH2_SPAWNS, CH2_PATROL } from './ch2-act1.mjs';
+import { CH2_ROOMS, CH2_DOORS, CH2_THINGS, CH2_SPAWNS, CH2_PATROL, CH2_A2_ROOMS, CH2_A2_SPAWNS } from './ch2-act1.mjs';
 
 const L = (zh, en) => ({ zh, en });
 
@@ -196,7 +196,7 @@ SPAWNS.act4 = A4_SPAWN;
 const CH1_ONLY = new Set(['seat', 'lock_eldrin', 'ceiling_eldrin', 'lock_grimoire', 'runechart', 'scale', 'huntlog', 'hourglass', 'disk',
   ...['eldrin', 'grimoire', 'belmont', 'ouroboros'].flatMap((h) => [`window_${h}`, `mirror_${h}`])]);
 for (let i = THINGS.length - 1; i >= 0; i--) if (CH1_ONLY.has(THINGS[i].id)) THINGS.splice(i, 1);
-ROOMS.push(...CH2_ROOMS);
+ROOMS.push(...CH2_ROOMS, ...CH2_A2_ROOMS);
 DOORS.push(...CH2_DOORS);
 THINGS.push(...CH2_THINGS);
-SPAWNS.prologue = CH2_SPAWNS.prologue; SPAWNS.act1 = CH2_SPAWNS.act1; SPAWNS.hall = CH2_SPAWNS.hall;
+SPAWNS.prologue = CH2_SPAWNS.prologue; SPAWNS.act1 = CH2_SPAWNS.act1; SPAWNS.hall = CH2_SPAWNS.hall; SPAWNS.act2 = CH2_A2_SPAWNS.act2;

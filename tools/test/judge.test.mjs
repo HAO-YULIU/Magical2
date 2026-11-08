@@ -1,7 +1,7 @@
 // 答案判斷的單元測試：每一題的正確答案要對、錯誤答案要錯
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { judge, hint, circledChar, greenSpots, SEATS, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
+import { judge, hint, circledChar, greenSpots, SEATS, xrayPuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
 import { ROOF as ROOF_GAME } from '../../game/src/data/act4-ch1.mjs';
 import { ROOF } from '../../data/puzzles/ch1.mjs';
 import { CHAPTER1 } from '../../data/puzzles/ch1.mjs';
@@ -18,7 +18,6 @@ test('文字、順序、集合題', () => {
   assert.equal(ok('Q05', 'moonwort,batwing,silver'), true);
   assert.equal(ok('Q08', 'blackroot,thirteen,hername'), true);
   assert.equal(ok('Q09', '8:36'), true); assert.equal(ok('Q09', '836'), true); assert.equal(ok('Q09', '8:24'), false);
-  assert.equal(ok('P10', 'nw|1626'), true);
   assert.equal(ok('P11', '257'), true);
   assert.equal(ok('P12', 'wind,fire,earth,water'), true);
   assert.equal(ok('P14', '鐘在井底'), true);
@@ -43,6 +42,9 @@ test('第二章：點名簿的紅圈（Q04）、溫室的異常（Q06）由房�
   assert.equal(judge('Q06', [...sp].reverse(), ctx({ seed: 'seed-x' })).solved, true);
   assert.equal(judge('Q06', sp.slice(0, 2), ctx({ seed: 'seed-x' })).solved, false);
   assert.match(hint('Q06', 2, 'zh', { spot: '仙人掌' }), /仙人掌/);
+  for (const seed of ['a', 'b', 'room-1', 'room-2']) { const x = xrayPuzzle(seed); assert.ok(x, seed); assert.equal(x.ans.length, 6); assert.ok(x.ans.every((c) => x.nails.includes(c))); assert.equal(judge('Q13', x.ans, ctx({ seed })).solved, true); }
+  assert.equal(ok('Q11', 'pain,pain,sleep'), true); assert.equal(ok('Q11', 'sleep,sleep,pain'), false);
+  assert.equal(ok('Q12', '1896'), true); assert.equal(ok('Q14', 'Liana'), true); assert.equal(ok('Q15', 'knox'), true); assert.equal(ok('Q16', '1871'), true);
 });
 
 test('沙漏：要剛好在沙漏漏完的那一刻敲第 15 分', () => {
@@ -77,24 +79,6 @@ test('天平：秤兩次就能找到，第三次會重新洗牌', () => {
   assert.ok(Number.isInteger(heavy));
 });
 
-test('異常長廊：連續答對 8 趟才過，答錯歸零', () => {
-  const st = {};
-  const c = () => ctx({ state: st });
-  let res;
-  for (let i = 0; i < 8; i++) {
-    const anomaly = corridorLoop('test-seed', st.attempt ?? 0, st.n ?? 0);
-    if (i === 0) assert.equal(anomaly, null); // 第一趟一定正常
-    res = judge('P09', { loop: st.n ?? 0, choice: anomaly ? 'back' : 'forward' }, c());
-    assert.equal(res.reply.right, true);
-  }
-  assert.equal(res.solved, true);
-  const st2 = {};
-  judge('P09', { loop: 0, choice: 'forward' }, ctx({ state: st2 }));
-  const a = corridorLoop('test-seed', 0, 1);
-  judge('P09', { loop: 1, choice: a ? 'forward' : 'back' }, ctx({ state: st2 })); // 故意答錯
-  assert.equal(st2.streak, 0); assert.equal(st2.n, 0); assert.equal(st2.attempt, 1);
-});
-
 test('救援題、自救題：內容和答案一致', () => {
   const c3 = rescueContent('R3', 'seed-x', 'k', { house: 'belmont' }).cipher;
   const plain = ['FREE', 'LIGHT', 'AWAKE', 'BREAK'].find((w) => w.replace(/[A-Z]/g, (ch) => String.fromCharCode((ch.charCodeAt(0) - 65 + 9) % 26 + 65)) === c3);
@@ -114,15 +98,10 @@ test('每一題（除了不計分的）都有三張中英文提示，難度比�
     assert.equal(d.hints?.zh?.length, 3, pid); assert.equal(d.hints?.en?.length, 3, pid);
     if (PUZZLES[pid]) assert.ok(hint(pid, 2, 'en')); // 序幕、第一幕已經換成第二章的題目
   }
-  for (const [pid, d] of Object.entries(CHAPTER2)) if (d.kind !== 'event') { assert.equal(d.hints?.zh?.length, 3, pid); assert.equal(d.hints?.en?.length, 3, pid); assert.ok(hint(pid, 2, 'en'), pid); }
+  for (const [pid, d] of Object.entries(CHAPTER2)) if (d.kind !== 'event' && d.score !== false) { assert.equal(d.hints?.zh?.length, 3, pid); assert.equal(d.hints?.en?.length, 3, pid); assert.ok(hint(pid, 2, 'en'), pid); }
   const count = {}; for (const [, d] of scored) count[d.diff] = (count[d.diff] ?? 0) + 1;
   assert.deepEqual(count, { 6: 5, 7: 8, 8: 9, 9: 5, 10: 3 }); // docs/04-map-ch1.md 的難度分配＋2026-10-26 新增的 P30（7）、P31（8）、P32（7）
   assert.ok(Object.keys(PUZZLES).length >= 36);
-});
-
-test('異常長廊的第三張提示會填入要注意的地方', () => {
-  assert.equal(hint('P09', 2, 'zh', { focus: corridorFocus({ id: 'lullaby' }, 'zh') }), '這一趟要特別注意：聲音');
-  assert.match(hint('P09', 2, 'en', { focus: corridorFocus(null, 'en') }), /nothing may be wrong/);
 });
 
 test('P29 屋頂的符文路：一步一步踩，踩錯就碎掉', () => {

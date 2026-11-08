@@ -2,6 +2,7 @@
 // 格式跟 ch1.mjs 一樣（kind、seg、diff、hints…）。目前做到序幕＋第一幕（Q01～Q09）；第二幕以後還是第一章的題目（之後換掉）。
 // 新的 kind：
 //   rollcircle  Q04：伺服器依房間選一個玩家角色，答案是他在點名簿上的座號（peek 回傳空白紅圈的學院顏色）
+//   xray        Q13：伺服器依房間產生 4×4 的 6 格（保證只有一組解）；peek 回傳床板的 10 根釘子、X 光片上每一排／每一列的格數；value＝6 格的編號（0～15）
 //   spots       Q06：伺服器依房間從 8 個地方選 3 個異常（peek 回傳哪三個，畫面要畫出來）；value＝三個地方的 id
 
 const H = (zh, en) => ({ zh, en });
@@ -59,7 +60,47 @@ export const CHAPTER2 = {
     hints: H(['四組灑水器什麼時候會剛好一起停？', '上一次一起是 8 點整。找 4、6、9、12 都能整除的最小的數。', '36。等時鐘走到 8 點 36 分再拉。'],
              ['When will all four sprinkler groups stop together?', 'The last time was exactly 8:00. Find the smallest number that 4, 6, 9 and 12 all divide.', '36. Wait for the clock to read 8:36, then pull.']),
   },
+  // ---------- 第二幕：醫務室與舊檔案室 ----------
+  Q10: {
+    seg: 'act2', diff: 7, kind: 'text', ans: ['13', '十三'],
+    hints: H(['歐文說他們都睡同一張床。看看紀錄上的床號。', '症狀是黑紋的那幾筆，日期都是十三號。床號呢？', '醫務室只有 1～8 號床，可是紀錄寫的是 13 號床。'],
+             ['Owen says they all slept in the same bed. Look at the bed numbers in the records.', 'The entries with black veins are all dated the 13th. And the bed?', 'The infirmary only has beds 1 to 8 — but the records say bed 13.']),
+  },
+  Q11: {
+    seg: 'act2', diff: 8, kind: 'seq', ans: ['sleep,pain,pain', 'pain,sleep,pain', 'pain,pain,sleep'],
+    hints: H(['先把每一種藥瓶換成「幾瓶止痛藥」。', '一瓶安眠藥等於三瓶止痛藥；兩瓶安眠藥等於抑制劑加一瓶止痛藥。', '一瓶安眠藥加兩瓶止痛藥。'],
+             ['Turn every bottle into “how many painkillers”.', 'One sleeping draught equals three painkillers; two sleeping draughts equal the suppressant plus one painkiller.', 'One sleeping draught and two painkillers.']),
+  },
+  Q12: {
+    seg: 'act2', diff: 9, kind: 'text', ans: '1896', gives: 'note5',
+    hints: H(['抽屜的編號跟名字有關。對照幾個有名字的抽屜。', '編號＝入學年份加上學院的時辰（艾爾德林 8、格里莫瓦 11、貝爾蒙特 9、烏洛波斯 3）。', '莉安娜 1888 年入學、艾爾德林（8）：1896。'],
+             ['The drawer numbers have something to do with the names. Compare the drawers that are labelled.', 'Number = year of enrolment plus the house’s hour (Eldrin 8, Grimoire 11, Belmont 9, Ouroboros 3).', 'Liana enrolled in 1888, Eldrin (8): 1896.']),
+  },
+  Q13: {
+    seg: 'act2', diff: 10, kind: 'xray',
+    hints: H(['兩邊各只有一半的資訊：床板上的釘子、X 光片上每一排每一列有幾格。', '先找出釘子裡面，每一排、每一列數量都對得上的格子。', '其中三格是：{cells}。'],
+             ['Each side has only half the information: the nails in the bed board, and how many cells in each row and column on the X-ray.', 'Among the nails, find the cells whose row and column counts all fit.', 'Three of the cells are: {cells}.']),
+  },
+  Q14: {
+    seg: 'act2', diff: 8, kind: 'text', ans: 'liana', gives: 'note6',
+    hints: H(['序幕的公告欄上，有校長親筆寫的字。', '他寫 M 的最後一筆往上勾，而且只用綠色墨水。', '是莉安娜的那一張。'],
+             ['On the notice board in the prologue, there is something the headmaster wrote by hand.', 'His M ends with an upward hook, and he only ever uses green ink.', 'It is Liana’s.']),
+  },
+  Q15: {
+    seg: 'act2', diff: 8, kind: 'text', ans: 'KNOX',
+    hints: H(['心跳有長有短，像書上的那種記法。', '長的是「－」，短的是「・」。', '拍出來的是 KNOX。'],
+             ['The heartbeats are long and short, like the notation in the book.', 'Long is “–”, short is “·”.', 'It spells KNOX.']),
+  },
+  Q16: {
+    seg: 'act2', diff: 7, kind: 'text', ans: '1871',
+    hints: H(['歐文死前在鑰匙牌上刮了東西。', '刮痕只有一半，看看它在燈下的影子。', '是 1871 號抽屜。'],
+             ['Before he died, Owen scratched something into the key tag.', 'The scratches are only half there — look at their shadow under the lamp.', 'Drawer 1871.']),
+  },
+  C2: { seg: 'act2', diff: 0, score: false, kind: 'choice', options: ['tell', 'tear'] }, // 西里爾的第二個抉擇（告訴大家／撕掉那一頁）
 };
 // 第一幕：這些都解開才進到第二幕
-export const CH2_GATES = { act1: { need: ['Q03', 'Q04', 'Q05', 'Q06', 'Q07', 'Q08', 'Q09'], next: 'act2' } };
+export const CH2_GATES = {
+  act1: { need: ['Q03', 'Q04', 'Q05', 'Q06', 'Q07', 'Q08', 'Q09'], next: 'act2' },
+  act2: { need: ['Q10', 'Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q16'], next: 'act3a' },
+};
 export const CH2_SEG_END = { Q02: 'act1' };

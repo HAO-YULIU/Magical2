@@ -533,3 +533,20 @@ body.bigtext #caption { font-size: 20px; } body.bigtext #toast { font-size: 18px
 .ch2-roll li.blank b { border-color: var(--hc, #c02020); box-shadow: 0 0 6px var(--hc, #c02020); }
 .ch2-roll small { color: #c08080; font-size: 11px; }
 .ch2-clock { font: 46px serif; text-align: center; color: #d8f0d0; margin: 10px 0; letter-spacing: 3px; }
+
+.ch2-table { border-collapse: collapse; width: 100%; font-size: 14px; margin: 6px 0; }
+.ch2-table th, .ch2-table td { border: 1px solid #5a4a3a; padding: 3px 6px; text-align: left; }
+.ch2-pan { color: #e8d8b0; }
+.ch2-xray { display: grid; grid-template-columns: 52px repeat(4, 44px); gap: 4px; justify-content: center; margin: 8px 0; align-items: center; }
+.ch2-xray b { font-size: 12px; color: #c8d8e8; text-align: center; }
+.ch2-xray .cell { width: 44px; height: 44px; border: 1px solid #6a8aa0; background: #10181e; border-radius: 4px; display: grid; place-items: center; color: #d8c8a0; }
+.ch2-xray .cell.on { background: #a8e0ff; box-shadow: 0 0 10px #a8e0ff; }
+.ch2-xray.nails .cell.nail { background: #3a2a1a; font-size: 20px; }
+.ch2-doc { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+.ch2-doc small { color: #b8a888; }
+.ch2-beat { width: 60px; height: 60px; margin: 8px auto; border-radius: 50%; background: #3a0a0a; transition: background .08s; }
+.ch2-beat.on { background: #ff4a4a; box-shadow: 0 0 20px #ff4a4a; }
+.ch2-morse { text-align: center; font-size: 22px; letter-spacing: 2px; min-height: 30px; }
+.ch2-tag { position: relative; width: 220px; height: 90px; margin: 10px auto; background: #8a6a2c; border-radius: 8px 30px 30px 8px; display: grid; place-items: center; overflow: hidden; }
+.ch2-tag .top { position: absolute; font: bold 52px serif; color: #2a1a08; clip-path: inset(0 0 52% 0); letter-spacing: 6px; }
+.ch2-tag .shadow { position: absolute; font: bold 52px serif; color: rgba(0, 0, 0, 0.45); clip-path: inset(52% 0 0 0); transform: translate(6px, 4px) skewX(-12deg); filter: blur(1.2px); letter-spacing: 6px; }

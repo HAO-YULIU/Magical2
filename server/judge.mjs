@@ -4,12 +4,27 @@ import { CHAPTER1, RESCUE, SELF_RESCUE, HOUSE_HOUR, BOOK_CIPHER, BRAILLE_DOOR, R
 import { CHAPTER2, SEATS, GREEN_SPOTS } from '../data/puzzles/ch2.mjs';
 
 // 第二章（2026-11-05 起）：序幕、第一幕用第二章的題目（Q01～Q09）；第二幕以後暫時還是第一章的題目，之後一段一段換掉
-const CH1_LATER = Object.fromEntries(Object.entries(CHAPTER1).filter(([, d]) => !['prologue', 'act1'].includes(d.seg)));
+const CH1_LATER = Object.fromEntries(Object.entries(CHAPTER1).filter(([, d]) => !['prologue', 'act1', 'act2'].includes(d.seg)));
 export const PUZZLES = { ...CHAPTER2, ...CH1_LATER, ...RESCUE, ...SELF_RESCUE };
 export { SEATS, GREEN_SPOTS };
 const CH2_CHARS = ['elora', 'yuexi', 'vaughn', 'cyril'];
 // Q04：被圈起來、還沒失蹤的那一個（房間裡有人扮演的角色優先）
 export const circledChar = (seed, chars = []) => { const pool = chars.length ? chars : CH2_CHARS; return pool[Math.floor(rng(seed, 'Q04')() * pool.length)]; };
+// Q13：4×4 的 6 格。釘子 10 根（包含答案的 6 格）；X 光片上每排、每列各有幾格。只收「釘子裡只有一組符合」的題目
+export function xrayPuzzle(seed) {
+  const r = rng(seed, 'Q13');
+  const combos = (arr, k) => (k === 0 ? [[]] : arr.flatMap((x, i) => combos(arr.slice(i + 1), k - 1).map((c) => [x, ...c])));
+  const counts = (cells) => { const row = [0, 0, 0, 0], col = [0, 0, 0, 0]; for (const c of cells) { row[c >> 2]++; col[c & 3]++; } return { row, col }; };
+  for (let tries = 0; tries < 500; tries++) {
+    const all = [...Array(16).keys()], nails = []; while (nails.length < 10) nails.push(all.splice(Math.floor(r() * all.length), 1)[0]);
+    nails.sort((a, b) => a - b);
+    const pick = [...nails]; const ans = []; while (ans.length < 6) ans.push(pick.splice(Math.floor(r() * pick.length), 1)[0]);
+    ans.sort((a, b) => a - b);
+    const want = JSON.stringify(counts(ans));
+    if (combos(nails, 6).filter((c) => JSON.stringify(counts(c)) === want).length === 1) return { nails, ans, ...counts(ans) };
+  }
+  return null;
+}
 // Q06：溫室裡被動過手腳的三個地方
 export function greenSpots(seed) { const r = rng(seed, 'Q06'), left = [...GREEN_SPOTS], out = []; while (out.length < 3) out.push(left.splice(Math.floor(r() * left.length), 1)[0]); return out; }
 export const HOUSES = ['eldrin', 'grimoire', 'belmont', 'ouroboros'];
@@ -169,6 +184,7 @@ export function judge(pid, value, ctx) {
   switch (def.kind) {
     case 'event': return { ok: true, solved: true };
     case 'rollcircle': { const c = circledChar(ctx.seed, ctx.chars); return { ok: true, solved: norm(value) === norm(SEATS[c]) || +value === +SEATS[c] }; }
+    case 'xray': { const x = xrayPuzzle(ctx.seed); const got = asList(value).map(Number).sort((a, b) => a - b).join(','); return { ok: true, solved: !!x && got === x.ans.join(',') }; }
     case 'spots': { const want = greenSpots(ctx.seed).sort().join(','); const got = asList(value).map(String).sort().join(','); return { ok: true, solved: got === want }; }
     case 'choice': return def.options.includes(value) ? { ok: true, solved: true, flag: value } : { ok: false, error: 'bad_value' };
     case 'text': {
@@ -282,5 +298,6 @@ export function hint(pid, n, lang, ctx = {}) {
   let text = list[n];
   if (pid === 'P09' && ctx.focus) text = text.replace('{focus}', ctx.focus);
   if (pid === 'Q06' && ctx.spot) text = text.replace('{spot}', ctx.spot);
+  if (pid === 'Q13' && ctx.cells) text = text.replace('{cells}', ctx.cells);
   return text;
 }
