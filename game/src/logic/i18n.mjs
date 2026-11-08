@@ -1,7 +1,7 @@
 // 介面文字（中文／英文）。每個玩家自己選介面語言；謎題語言由房主開房時決定。
 const TEXT = {
   zh: {
-    title: '魔蝕milner',
+    title: '魔蝕milner:蝕宴',
     age_title: '本遊戲為 18+ 遊戲',
     age_body: '未滿 18 歲請勿遊玩。',
     age_ok: '我已滿 18 歲，進入遊戲',
@@ -11,7 +11,7 @@ const TEXT = {
     age_tags: '血腥|肢體損毀|突然驚嚇|心理恐怖',
     lang: '語言',
     need_login_title: '請從夜語工作室大廳進入',
-    need_login_body: '《魔蝕milner》使用夜語工作室的帳號登入。',
+    need_login_body: '《魔蝕milner:蝕宴》使用夜語工作室的帳號登入。',
     need_player_body: '請先在夜語工作室大廳建立角色（暱稱）。',
     to_lobby: '前往大廳',
     dev_login: '開發者登入', dev_email: '大廳帳號的 Email', dev_pass: '密碼', dev_login_go: '登入', dev_bad_login: 'Email 或密碼不對。', dev_not_dev: '這個帳號不是開發者（大廳的管理員），遊戲還沒開放。',
@@ -286,7 +286,7 @@ const TEXT = {
     },
   },
   en: {
-    title: '魔蝕milner',
+    title: '魔蝕milner: The Blighted Feast',
     age_title: 'This game is for ages 18+',
     age_body: 'Do not play if you are under 18.',
     age_ok: 'I am 18 or older — enter',
