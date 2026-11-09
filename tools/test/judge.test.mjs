@@ -1,7 +1,7 @@
 // 答案判斷的單元測試：每一題的正確答案要對、錯誤答案要錯
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { judge, hint, circledChar, greenSpots, SEATS, xrayPuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
+import { judge, hint, circledChar, greenSpots, SEATS, xrayPuzzle, juicePuzzle, runePuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
 import { ROOF as ROOF_GAME } from '../../game/src/data/act4-ch1.mjs';
 import { ROOF } from '../../data/puzzles/ch1.mjs';
 import { CHAPTER1 } from '../../data/puzzles/ch1.mjs';
@@ -18,18 +18,6 @@ test('文字、順序、集合題', () => {
   assert.equal(ok('Q05', 'moonwort,batwing,silver'), true);
   assert.equal(ok('Q08', 'blackroot,thirteen,hername'), true);
   assert.equal(ok('Q09', '8:36'), true); assert.equal(ok('Q09', '836'), true); assert.equal(ok('Q09', '8:24'), false);
-  assert.equal(ok('P11', '257'), true);
-  assert.equal(ok('P12', 'wind,fire,earth,water'), true);
-  assert.equal(ok('P14', '鐘在井底'), true);
-  assert.equal(ok('P14', 'the bell lies in the well.', { lang: 'en' }), true);
-  assert.equal(ok('P14', '鐘在井底', { lang: 'en' }), false); // 英文房間要英文答案
-  assert.equal(ok('P15', '3141'), true);
-  assert.equal(ok('P16', 'xxxiii'), true); assert.equal(ok('P16', '33'), true);
-  assert.equal(ok('P17', '110111'), true);
-  assert.equal(ok('P18', 'b,l,i,g,h,t'), true);
-  assert.equal(ok('P23', '1,6,11,16,15,14,13'), true); assert.equal(ok('P23', '4,7,10,13,14,15,16'), false);
-  assert.equal(ok('P24', 'well'), true);
-  assert.equal(ok('P25', '5,7,3'), true);
   assert.equal(ok('P27', '12,24,18,36'), true);
   assert.equal(ok('P28', 'LSSLLSL'), true);
 });
@@ -44,7 +32,12 @@ test('第二章：點名簿的紅圈（Q04）、溫室的異常（Q06）由房�
   assert.match(hint('Q06', 2, 'zh', { spot: '仙人掌' }), /仙人掌/);
   for (const seed of ['a', 'b', 'room-1', 'room-2']) { const x = xrayPuzzle(seed); assert.ok(x, seed); assert.equal(x.ans.length, 6); assert.ok(x.ans.every((c) => x.nails.includes(c))); assert.equal(judge('Q13', x.ans, ctx({ seed })).solved, true); }
   assert.equal(ok('Q11', 'pain,pain,sleep'), true); assert.equal(ok('Q11', 'sleep,sleep,pain'), false);
-  assert.equal(ok('Q12', '1896'), true); assert.equal(ok('Q14', 'Liana'), true); assert.equal(ok('Q15', 'knox'), true); assert.equal(ok('Q16', '1871'), true);
+  assert.equal(ok('Q12', '1896'), true);
+  const j = juicePuzzle('s1'); assert.equal(judge('Q17', j.drugged, ctx({ seed: 's1' })).solved, true); assert.equal(judge('Q17', j.other, ctx({ seed: 's1' })).solved, false);
+  assert.equal(Math.max(...j.cups), j.cups[Math.ceil(j.drugged / 2) - 1]); assert.ok(j.cups.filter((c) => c === Math.max(...j.cups)).length === 1); // 下藥那桌喝最多（只有一桌）
+  assert.notEqual(Math.ceil(j.other / 2), Math.ceil(j.drugged / 2));
+  assert.equal(judge('Q19', runePuzzle('s1'), ctx({ seed: 's1' })).solved, true);
+  assert.equal(ok('Q20', 'OPEN'), true); assert.equal(ok('Q21', '12,2,3,5,6'), true); assert.equal(ok('Q22', '1:00'), true); assert.equal(ok('Q22', '12'), false); assert.equal(ok('Q14', 'Liana'), true); assert.equal(ok('Q15', 'knox'), true); assert.equal(ok('Q16', '1871'), true);
 });
 
 test('沙漏：要剛好在沙漏漏完的那一刻敲第 15 分', () => {
@@ -57,26 +50,6 @@ test('拉桿：A＋B 或 C＋D', () => {
   assert.equal(ok('P26', ['C', 'D']), true);
   assert.equal(ok('P26', ['A']), false);
   assert.equal(ok('P26', ['A', 'B', 'C', 'D']), false);
-});
-
-test('天平：秤兩次就能找到，第三次會重新洗牌', () => {
-  const st = {};
-  const c = () => ctx({ state: st, house: 'ouroboros', solo: false });
-  // 照提示的方法找
-  let r = judge('P21', { weigh: { left: [0, 1, 2], right: [3, 4, 5] } }, c()).reply.result;
-  const group = r === 'left' ? [0, 1, 2] : r === 'right' ? [3, 4, 5] : [6, 7, 8];
-  r = judge('P21', { weigh: { left: [group[0]], right: [group[1]] } }, c()).reply.result;
-  const heavy = r === 'left' ? group[0] : r === 'right' ? group[1] : group[2];
-  assert.equal(judge('P21', { weigh: { left: [0], right: [1] } }, c()).reply.reshuffled, true); // 第三次：洗牌
-  assert.equal(st.round, 1);
-  // 洗牌後重新找一次，指認正確
-  st.used = 0;
-  r = judge('P21', { weigh: { left: [0, 1, 2], right: [3, 4, 5] } }, c()).reply.result;
-  const g2 = r === 'left' ? [0, 1, 2] : r === 'right' ? [3, 4, 5] : [6, 7, 8];
-  r = judge('P21', { weigh: { left: [g2[0]], right: [g2[1]] } }, c()).reply.result;
-  const h2 = r === 'left' ? g2[0] : r === 'right' ? g2[1] : g2[2];
-  assert.equal(judge('P21', { pick: h2 }, c()).solved, true);
-  assert.ok(Number.isInteger(heavy));
 });
 
 test('救援題、自救題：內容和答案一致', () => {
@@ -133,8 +106,6 @@ test('S4 說謊者題：每一組都只有一個解', () => {
 
 test('多人：電腦控制的學院的題目誰都可以做；那個學院的長廊異常不會出現', () => {
   const multi = (o) => ctx({ solo: false, house: 'grimoire', ...o });
-  assert.equal(judge('P20', 'done', multi()).error, 'not_your_house');
-  assert.equal(judge('P20', 'done', multi({ aiHouses: ['belmont'] })).solved, true);
   for (let a = 0; a < 40; a++) for (let n = 1; n < 9; n++) {
     const x = corridorLoop('seed-skip', a, n, { skip: ['eldrin', 'belmont'] });
     assert.ok(!x || !['eldrin', 'belmont'].includes(x.house));

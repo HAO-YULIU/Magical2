@@ -3,6 +3,8 @@
 // 新的 kind：
 //   rollcircle  Q04：伺服器依房間選一個玩家角色，答案是他在點名簿上的座號（peek 回傳空白紅圈的學院顏色）
 //   xray        Q13：伺服器依房間產生 4×4 的 6 格（保證只有一組解）；peek 回傳床板的 10 根釘子、X 光片上每一排／每一列的格數；value＝6 格的編號（0～15）
+//   jug         Q17：伺服器依房間選被下藥的那一壺（1～6）；peek 回傳閒聊、每桌喝了幾杯；value＝壺的編號
+//   runes       Q19：伺服器選 4 個符文；peek 回傳赫爾嘉夫人的描述（不含符文本身）；value＝符文的 id，逗號分隔
 //   spots       Q06：伺服器依房間從 8 個地方選 3 個異常（peek 回傳哪三個，畫面要畫出來）；value＝三個地方的 id
 
 const H = (zh, en) => ({ zh, en });
@@ -97,10 +99,51 @@ export const CHAPTER2 = {
              ['Before he died, Owen scratched something into the key tag.', 'The scratches are only half there — look at their shadow under the lamp.', 'Drawer 1871.']),
   },
   C2: { seg: 'act2', diff: 0, score: false, kind: 'choice', options: ['tell', 'tear'] }, // 西里爾的第二個抉擇（告訴大家／撕掉那一頁）
+  // ---------- 第三幕 A：萬聖晚宴（Q17 在遇襲前；遇襲後 15 分鐘倒數，時間到不算輸） ----------
+  Q17: {
+    seg: 'act3a', diff: 9, kind: 'jug',
+    hints: H(['到處聽聽大家在聊什麼，記下誰端了哪一壺。', '被下藥的那壺是諾克斯端的，而且放在喝最多的那一桌。', '是第 {jug} 壺。'],
+             ['Listen to what everyone is saying, and note who carried which jug.', 'The drugged jug was carried by Knox, and it stands on the table that drank the most.', 'It is jug {jug}.']),
+  },
+  Q18: {
+    seg: 'act3a', diff: 7, kind: 'event',
+    hints: H(['他們看不太到，但聽得到。', '找會發出很大聲音、又離側門很遠的東西。', '打下典禮廳最裡面（南邊）的吊燈。'],
+             ['They can barely see, but they can hear.', 'Find something that makes a huge noise and is far from the side door.', 'Bring down the chandelier at the far (south) end of the hall.']),
+  },
+  Q19: {
+    seg: 'act3a', diff: 9, kind: 'runes',
+    hints: H(['夫人描述的是符文的形狀。筆記本裡有第一章的符文表。', '「倒過來的叉子」是 ᛉ、「兩座山」是 ᛗ、「一道閃電」是 ᛊ、「沒有門的門框」是 ᚢ、「打勾」是 ᚲ、「一個菱形」是 ᛜ。', '前兩個是：{runes}。'],
+             ['Madam Helga is describing the shapes of runes. The rune table from chapter one is in your journal.', '“An upside-down fork” is ᛉ, “two mountains” ᛗ, “a lightning bolt” ᛊ, “a door frame without a door” ᚢ, “a tick” ᚲ, “a diamond” ᛜ.', 'The first two are: {runes}.']),
+  },
+  // ---------- 第三幕 B：校長倒下之後（沒有倒數） ----------
+  Q20: {
+    seg: 'act3b', diff: 8, kind: 'text', ans: 'open',
+    hints: H(['血裡畫了東西。試試光照咒。', '是一條蛇，但頭跟尾巴沒有咬在一起。', '把牆上的銜尾蛇徽記轉成「頭尾分開」。'],
+             ['Something is drawn in the blood. Try the light spell.', 'A serpent — but its head and tail do not meet.', 'Turn the serpent crest on the wall so its head and tail are apart.']),
+  },
+  Q21: {
+    seg: 'act3b', diff: 10, kind: 'seq', ans: '12,2,3,5,6',
+    hints: H(['地上的血腳印是面具人留下的。', '每一步腳印朝一個方向；鱗片像時鐘一樣排（北＝12 點）。', '前三片是 12 點、2 點、3 點。'],
+             ['The bloody footprints were left by the masked figure.', 'Each footprint points one way; the scales are arranged like a clock (north = 12).', 'The first three are 12, 2 and 3 o’clock.']),
+  },
+  Q22: {
+    seg: 'act3b', diff: 10, kind: 'text', ans: ['1', '01', '1:00', '13'],
+    hints: H(['紙條說「十三號」。鐘只有 12 個數字，那第十三響是什麼時候？', '12 點之後再敲一下，就是第十三響。', '把鐘撥到 1 點。'],
+             ['The note says “thirteen”. The clock only has twelve numbers — so when is the thirteenth toll?', 'One more toll after twelve is the thirteenth.', 'Set the clock to one o’clock.']),
+  },
 };
 // 第一幕：這些都解開才進到第二幕
 export const CH2_GATES = {
   act1: { need: ['Q03', 'Q04', 'Q05', 'Q06', 'Q07', 'Q08', 'Q09'], next: 'act2' },
   act2: { need: ['Q10', 'Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q16'], next: 'act3a' },
+  act3b: { need: ['Q20', 'Q21', 'Q22'], next: 'act4' }, // 第二章沒有第三幕 C
 };
 export const CH2_SEG_END = { Q02: 'act1' };
+
+// Q19：符文與赫爾嘉夫人的描述（第一章的符文表）
+export const RUNE_DESC = [
+  ['algiz', 'ᛉ', H('像一把倒過來的叉子', 'like an upside-down fork')], ['mannaz', 'ᛗ', H('像兩座山', 'like two mountains')], ['sowilo', 'ᛊ', H('像一道閃電', 'like a lightning bolt')],
+  ['uruz', 'ᚢ', H('像沒有門的門框', 'like a door frame with no door')], ['kenaz', 'ᚲ', H('像一個打勾，躺下來', 'like a tick lying on its side')], ['ingwaz', 'ᛜ', H('像一個菱形', 'like a diamond')],
+  ['tiwaz', 'ᛏ', H('像一支往上指的箭', 'like an arrow pointing up')], ['gebo', 'ᚷ', H('像一個大叉叉', 'like a big X')],
+];
+export const FEAST = { duration: 15 * 60 * 1000, preAttack: 4 * 60 * 1000 }; // 遇襲後的倒數；晚宴開始多久沒動作就自動遇襲

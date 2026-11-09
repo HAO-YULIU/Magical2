@@ -1,10 +1,10 @@
 // 判斷答案（只在伺服器執行）。題目資料見 data/puzzles/ch1.mjs。
 // 隨機的題目（P09、P21、救援題、自救題）用房間的亂數種子決定，同一個房間每次結果一樣，不同房間不同。
 import { CHAPTER1, RESCUE, SELF_RESCUE, HOUSE_HOUR, BOOK_CIPHER, BRAILLE_DOOR, ROOF } from '../data/puzzles/ch1.mjs';
-import { CHAPTER2, SEATS, GREEN_SPOTS } from '../data/puzzles/ch2.mjs';
+import { CHAPTER2, SEATS, GREEN_SPOTS, RUNE_DESC } from '../data/puzzles/ch2.mjs';
 
 // 第二章（2026-11-05 起）：序幕、第一幕用第二章的題目（Q01～Q09）；第二幕以後暫時還是第一章的題目，之後一段一段換掉
-const CH1_LATER = Object.fromEntries(Object.entries(CHAPTER1).filter(([, d]) => !['prologue', 'act1', 'act2'].includes(d.seg)));
+const CH1_LATER = Object.fromEntries(Object.entries(CHAPTER1).filter(([, d]) => !['prologue', 'act1', 'act2', 'act3a', 'act3b', 'act3c'].includes(d.seg)));
 export const PUZZLES = { ...CHAPTER2, ...CH1_LATER, ...RESCUE, ...SELF_RESCUE };
 export { SEATS, GREEN_SPOTS };
 const CH2_CHARS = ['elora', 'yuexi', 'vaughn', 'cyril'];
@@ -25,6 +25,16 @@ export function xrayPuzzle(seed) {
   }
   return null;
 }
+// Q17：被下藥的那一壺（1～6）、諾克斯端的另一壺、每桌喝了幾杯（下藥那桌最多）。壺 k 放在第 ceil(k/2) 張桌子（三張桌、每桌兩壺）
+export function juicePuzzle(seed) {
+  const r = rng(seed, 'Q17'); const drugged = 1 + Math.floor(r() * 6);
+  let other; do { other = 1 + Math.floor(r() * 6); } while (Math.ceil(other / 2) === Math.ceil(drugged / 2));
+  const helga = [1, 2, 3, 4, 5, 6].filter((k) => k !== drugged && k !== other)[Math.floor(r() * 4)];
+  const cups = [1, 2, 3].map((tb) => (tb === Math.ceil(drugged / 2) ? 11 + Math.floor(r() * 3) : 4 + Math.floor(r() * 5)));
+  return { drugged, other, helga, cups };
+}
+// Q19：四個符文（不重複）
+export function runePuzzle(seed) { const r = rng(seed, 'Q19'), left = RUNE_DESC.map((x) => x[0]), out = []; while (out.length < 4) out.push(left.splice(Math.floor(r() * left.length), 1)[0]); return out; }
 // Q06：溫室裡被動過手腳的三個地方
 export function greenSpots(seed) { const r = rng(seed, 'Q06'), left = [...GREEN_SPOTS], out = []; while (out.length < 3) out.push(left.splice(Math.floor(r() * left.length), 1)[0]); return out; }
 export const HOUSES = ['eldrin', 'grimoire', 'belmont', 'ouroboros'];
@@ -185,6 +195,8 @@ export function judge(pid, value, ctx) {
     case 'event': return { ok: true, solved: true };
     case 'rollcircle': { const c = circledChar(ctx.seed, ctx.chars); return { ok: true, solved: norm(value) === norm(SEATS[c]) || +value === +SEATS[c] }; }
     case 'xray': { const x = xrayPuzzle(ctx.seed); const got = asList(value).map(Number).sort((a, b) => a - b).join(','); return { ok: true, solved: !!x && got === x.ans.join(',') }; }
+    case 'jug': return { ok: true, solved: +value === juicePuzzle(ctx.seed).drugged };
+    case 'runes': return { ok: true, solved: asList(value).map((v) => String(v).trim().toLowerCase()).join(',') === runePuzzle(ctx.seed).join(',') };
     case 'spots': { const want = greenSpots(ctx.seed).sort().join(','); const got = asList(value).map(String).sort().join(','); return { ok: true, solved: got === want }; }
     case 'choice': return def.options.includes(value) ? { ok: true, solved: true, flag: value } : { ok: false, error: 'bad_value' };
     case 'text': {
@@ -299,5 +311,7 @@ export function hint(pid, n, lang, ctx = {}) {
   if (pid === 'P09' && ctx.focus) text = text.replace('{focus}', ctx.focus);
   if (pid === 'Q06' && ctx.spot) text = text.replace('{spot}', ctx.spot);
   if (pid === 'Q13' && ctx.cells) text = text.replace('{cells}', ctx.cells);
+  if (pid === 'Q17' && ctx.jug) text = text.replace('{jug}', ctx.jug);
+  if (pid === 'Q19' && ctx.runes) text = text.replace('{runes}', ctx.runes);
   return text;
 }

@@ -1,5 +1,6 @@
 // 房間的整合測試：在本機啟動真正的 Worker＋Durable Object（wrangler），用 WebSocket 模擬玩家。
 // 登入用 DEV_AUTH 的假帳號（dev-名字）。
+import { runePuzzle } from '../../server/judge.mjs';
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { unstable_dev } from 'wrangler';
@@ -155,12 +156,31 @@ test('多人：加入、選角色、準備、開始、同步、聊天、作答',
   assert.equal((await b.wait((m) => m.t === 'state' && m.segment === 'act3a')).segment, 'act3a');
   assert.equal((await b.request({ t: 'answer', pid: 'Q05', value: 'moonwort,batwing,silver' })).error, 'already_solved');
 
-  // 提示：全隊都看得到，最多三張
-  const h = await a.request({ t: 'hint', pid: 'P11' });
-  assert.match(h.text, /公告/);
-  assert.equal((await b.wait((m) => m.t === 'hint')).pid, 'P11');
-  await a.request({ t: 'hint', pid: 'P11' }); await a.request({ t: 'hint', pid: 'P11' });
-  assert.equal((await a.request({ t: 'hint', pid: 'P11' })).error, 'no_more_hints');
+  // 第三幕 A（第二章）：晚宴。喝南瓜汁（艾洛拉不喝）、Q17 指出被下藥的壺 → 遇襲、15 分鐘倒數；Q18、Q19 之後救低年級生
+  assert.equal((await b.request({ t: 'drink', drink: true })).error, 'not_yours'); // b 是艾洛拉
+  assert.equal((await a.request({ t: 'drink', drink: true })).t, 'ok');
+  assert.equal((await a.request({ t: 'answer', pid: 'Q18', value: 'done' })).error, 'not_yet'); // 還沒遇襲
+  const pk17 = await a.request({ t: 'peek', pid: 'Q17' }); assert.equal(pk17.content.knox.length, 2);
+  const big = pk17.content.cups.indexOf(Math.max(...pk17.content.cups)) + 1, jug = pk17.content.knox.find((k) => Math.ceil(k / 2) === big);
+  assert.equal((await a.request({ t: 'answer', pid: 'Q17', value: jug })).solved, true);
+  s = await b.wait((m) => m.t === 'state' && m.feast?.attack);
+  assert.ok(s.feast.deadline - s.feast.attack >= 14 * 60 * 1000); assert.deepEqual(s.feast.lost, []); assert.equal(s.juice[a.uid], true);
+  assert.ok((await a.request({ t: 'answer', pid: 'Q17', value: jug })).error); // 已經解開／來不及了
+  assert.equal((await b.request({ t: 'firstyear', kid: 0 })).error, 'door_locked');
+  // 提示：全隊都看得到，最多三張；第三張會填入答案的一部分
+  await a.request({ t: 'hint', pid: 'Q19' }); assert.equal((await b.wait((m) => m.t === 'hint')).pid, 'Q19');
+  await a.request({ t: 'hint', pid: 'Q19' }); assert.match((await a.request({ t: 'hint', pid: 'Q19' })).text, /[ᚠ-ᛪ]/);
+  assert.equal((await a.request({ t: 'hint', pid: 'Q19' })).error, 'no_more_hints');
+  assert.equal((await a.request({ t: 'answer', pid: 'Q18', value: 'done' })).solved, true);
+  const desc = (await b.request({ t: 'peek', pid: 'Q19' })).content.desc; assert.equal(desc.length, 4);
+  const RD = { 像一把倒過來的叉子: 'algiz', 像兩座山: 'mannaz', 像一道閃電: 'sowilo', 像沒有門的門框: 'uruz', '像一個打勾，躺下來': 'kenaz', 像一個菱形: 'ingwaz', 像一支往上指的箭: 'tiwaz', 像一個大叉叉: 'gebo' };
+  assert.equal((await b.request({ t: 'answer', pid: 'Q19', value: desc.map((d) => RD[d]).join(',') })).solved, true);
+  for (let i = 0; i < 8; i++) await (i % 2 ? a : b).request({ t: 'firstyear', kid: i });
+  s = await b.wait((m) => m.t === 'state' && m.segment === 'act3b');
+  assert.equal(s.feast.rescued.length, 8); assert.equal(s.feast.timeout, false);
+  // 第三幕 B：校長倒下之後 → 第四幕
+  for (const [pid, v] of [['Q20', 'open'], ['Q21', '12,2,3,5,6'], ['Q22', '1']]) assert.equal((await a.request({ t: 'answer', pid, value: v })).solved, true, pid);
+  assert.equal((await b.wait((m) => m.t === 'state' && m.segment === 'act4')).segment, 'act4');
 
   // 房主斷線：負責計算守夜人的人換手
   a.close();
@@ -178,10 +198,11 @@ test('單人：只能一個人，英文謎題', async () => {
   await p.request({ t: 'dev', segment: 'act3a' }); // 本機測試可以跳段
   const info = await (await fetch(`${base}/api/rooms/${code}`)).json();
   assert.equal(info.max, 1);
-  assert.equal((await p.request({ t: 'answer', pid: 'P14', value: 'THE BELL LIES IN THE WELL' })).solved, true);
-  // P15 錄音的字幕：轉盤調對（反轉＋0.5 倍）才給；調錯沒有
-  assert.equal((await p.request({ t: 'peek', pid: 'P15', value: { rev: true, speed: 0.5 } })).content.lines.length, 5);
-  assert.equal((await p.request({ t: 'peek', pid: 'P15', value: { rev: false, speed: 0.5 } })).content.lines, null);
+  // 英文房間：Q19 的描述是英文；Q17 指錯 → 兩個低年級生救不回來
+  const pk = await p.request({ t: 'peek', pid: 'Q17' }); const wrongJug = [1, 2, 3, 4, 5, 6].find((k) => !pk.content.knox.includes(k));
+  assert.equal((await p.request({ t: 'answer', pid: 'Q17', value: wrongJug })).solved, false);
+  assert.deepEqual((await p.wait((m) => m.t === 'feast')).lost, [6, 7]);
+  assert.match((await p.request({ t: 'peek', pid: 'Q19' })).content.desc[0], /^like /);
   // 重新連線（舊連線會被關掉）會回到同一段
   const again = await player(code, 'Solo');
   assert.equal((await again.wait((m) => m.t === 'state')).segment, 'act3a');
@@ -213,60 +234,6 @@ test('製作人的測試登入：密碼對才能用，可以跳段', async () =>
   assert.equal((await ask({ t: 'dev', segment: 'act1' })).t, 'ok');
   assert.equal(got.find((g) => g.t === 'hello').you, 'test-製作人');
   ws.close();
-});
-
-test('第三幕：道具、書本密碼、段落一段一段推進、西里爾的抉擇', async () => {
-  const code = await create('圖書館', 'solo');
-  const p = await player(code, '圖書館');
-  await p.request({ t: 'char', char: 'yuexi' }); await p.request({ t: 'ready', ready: true }); await p.request({ t: 'start' });
-  await p.request({ t: 'dev', segment: 'act3a' });
-  const ans = (pid, value) => p.request({ t: 'answer', pid, value });
-  assert.equal((await ans('P12', 'wind,fire,earth,water')).error, 'need_item'); // 要先拿到提燈
-  assert.equal((await p.request({ t: 'peek', pid: 'P12' })).error, 'need_item'); // 沒有燈看不到影子
-  assert.equal((await ans('P11', '257')).solved, true);
-  assert.ok((await p.wait((m) => m.t === 'state' && m.items.includes('lantern'))).items.includes('lantern'));
-  assert.deepEqual((await p.request({ t: 'peek', pid: 'P12' })).content.shadows, ['wind', 'fire', 'earth', 'water']);
-  assert.equal((await ans('P12', 'wind,fire,earth,water')).solved, true);
-  // 書本密碼：第 12 本第 3 頁第 7 個字是「鐘」（答案在伺服器產生的頁面裡）
-  const page = await p.request({ t: 'peek', pid: 'P14', value: { book: 12, page: 3 } });
-  assert.equal(page.content.words.length, 24); assert.equal(page.content.words[6], '鐘');
-  assert.equal((await ans('P13', 'done')).solved, true);
-  assert.equal((await ans('P14', '鐘在井底')).solved, true);
-  await p.wait((m) => m.t === 'state' && m.segment === 'act3b');
-  assert.equal((await p.request({ t: 'collect', item: 'note1' })).t, 'ok');
-  assert.equal((await p.request({ t: 'collect', item: 'mirror' })).error, 'bad_value'); // 道具不能自己撿
-  for (const [pid, v] of [['P15', '3141'], ['P16', 'XXXIII'], ['P17', '110111']]) assert.equal((await ans(pid, v)).solved, true, pid);
-  // 哭泣的娃娃：伺服器說哪一個在哭；抱錯了換另一個（重新問）
-  let doll = (await p.request({ t: 'peek', pid: 'P31' })).content.doll;
-  const wrong = await ans('P31', { pick: (doll + 1) % 5 });
-  assert.equal(wrong.solved, false); assert.equal(wrong.reply.reshuffled, true);
-  await sleep(3100);
-  doll = (await p.request({ t: 'peek', pid: 'P31' })).content.doll;
-  assert.equal((await ans('P31', { pick: doll })).solved, true);
-  const s3c = await p.wait((m) => m.t === 'state' && m.segment === 'act3c');
-  assert.ok(s3c.solved.includes('P22')); assert.equal(s3c.flags.P22, 'hide'); // 沒人扮演西里爾：電腦替他收起徽章
-  assert.deepEqual(['chartpage', 'lantern', 'mirror', 'note1', 'note3'].every((i) => s3c.items.includes(i)), true);
-  // 天平：照方法秤兩次
-  let r = (await ans('P21', { weigh: { left: [0, 1, 2], right: [3, 4, 5] } })).reply.result;
-  const g = r === 'left' ? [0, 1, 2] : r === 'right' ? [3, 4, 5] : [6, 7, 8];
-  r = (await ans('P21', { weigh: { left: [g[0]], right: [g[1]] } })).reply.result;
-  assert.equal((await ans('P21', { pick: r === 'left' ? g[0] : r === 'right' ? g[1] : g[2] })).solved, true);
-  for (const [pid, v] of [['P18', 'b,l,i,g,h,t'], ['P19', 'done'], ['P20', 'done'], ['P23', '1,6,11,16,15,14,13'], ['P24', 'WELL']]) assert.equal((await ans(pid, v)).solved, true, pid);
-  assert.deepEqual((await p.request({ t: 'peek', pid: 'P24' })).content.cells.length, 4);
-  assert.equal((await ans('P25', '5,7,3')).solved, true);
-  assert.equal((await p.wait((m) => m.t === 'state' && m.segment === 'act4')).segment, 'act4');
-  p.close();
-});
-
-test('第三幕多人：西里爾的抉擇只有扮演西里爾的人能做', async () => {
-  const code = await create('西里爾');
-  const a = await player(code, '西里爾'), b = await player(code, '月晞');
-  await a.request({ t: 'char', char: 'cyril' }); await b.request({ t: 'char', char: 'yuexi' });
-  await a.request({ t: 'ready', ready: true }); await b.request({ t: 'ready', ready: true }); await a.request({ t: 'start' });
-  await a.request({ t: 'dev', segment: 'act3c' });
-  assert.equal((await b.request({ t: 'answer', pid: 'P22', value: 'show' })).error, 'not_yours');
-  assert.equal((await a.request({ t: 'answer', pid: 'P22', value: 'show' })).solved, true);
-  a.close(); b.close();
 });
 
 test('第四幕單人：倒數、齒輪多 90 秒、被抓到復活 3 次、用完判定輸、重來', async () => {
@@ -374,7 +341,7 @@ test('整章：單人從序幕玩到尾聲，存檔記下結果，可以回來�
   const p = await player(code, name);
   await p.request({ t: 'char', char: 'yuexi' }); await p.request({ t: 'ready', ready: true }); await p.request({ t: 'start' });
   const ans = async (pid, value) => { const r = await p.request({ t: 'answer', pid, value }); assert.equal(r.solved, true, `${pid} ${JSON.stringify(r)}`); return r; };
-  const seg = (s) => p.wait((m) => m.t === 'state' && m.segment === s, 5000);
+  const seg = (s) => p.wait((m) => m.t === 'state' && m.segment === s, 5000).catch((e) => { throw new Error(`沒進到 ${s}`); });
   // 序幕、第一幕
   await ans('Q01', '3104'); await ans('Q02', 'tri,stitch'); await seg('act1');
   await sleep(200);
@@ -391,41 +358,24 @@ test('整章：單人從序幕玩到尾聲，存檔記下結果，可以回來�
     await ans('Q13', combos(c.nails, 6).find((cc) => [0, 1, 2, 3].every((r) => cc.filter((x) => x >> 2 === r).length === c.row[r]) && [0, 1, 2, 3].every((k) => cc.filter((x) => (x & 3) === k).length === c.col[k]))); }
   await ans('Q16', '1871'); await seg('act3a');
   // 第三幕
-  await ans('P11', '257'); await p.request({ t: 'collect', item: 'note1' }); await p.request({ t: 'collect', item: 'note2' });
-  for (const [pid, v] of [['P12', 'wind,fire,earth,water'], ['P13', 'exit'], ['P14', '鐘在井底']]) await ans(pid, v);
+  // 第三幕（第二章）：晚宴 → 遇襲 → 救低年級生 → 校長倒下之後
+  { const pk = (await p.request({ t: 'peek', pid: 'Q17' })).content; const big = pk.cups.indexOf(Math.max(...pk.cups)) + 1; await ans('Q17', pk.knox.find((k) => Math.ceil(k / 2) === big)); }
+  await ans('Q18', 'done'); await ans('Q19', runePuzzle(await (async () => { const st = await p.request({ t: 'dev', seed: true }); return st.seed; })()));
+  for (let i = 0; i < 8; i++) { const fr = await p.request({ t: 'firstyear', kid: i }); if (fr.t !== 'ok') console.log('firstyear', i, JSON.stringify(fr)); }
   await seg('act3b');
-  for (const [pid, v] of [['P15', '3141'], ['P16', 'XXXIII'], ['P17', '110111']]) await ans(pid, v);
-  await ans('P31', { pick: (await p.request({ t: 'peek', pid: 'P31' })).content.doll });
-  await seg('act3c');
-  let w = (await p.request({ t: 'answer', pid: 'P21', value: { weigh: { left: [0, 1, 2], right: [3, 4, 5] } } })).reply.result;
-  const g = w === 'left' ? [0, 1, 2] : w === 'right' ? [3, 4, 5] : [6, 7, 8];
-  w = (await p.request({ t: 'answer', pid: 'P21', value: { weigh: { left: [g[0]], right: [g[1]] } } })).reply.result;
-  await ans('P21', { pick: w === 'left' ? g[0] : w === 'right' ? g[1] : g[2] });
-  for (const [pid, v] of [['P18', 'b,l,i,g,h,t'], ['P19', 'done'], ['P20', 'done'], ['P23', '1,6,11,16,15,14,13'], ['P24', 'WELL'], ['P25', '5,7,3']]) await ans(pid, v);
-  await p.request({ t: 'collect', item: 'note4' });
+  for (const [pid, v] of [['Q20', 'open'], ['Q21', '12,2,3,5,6'], ['Q22', '1']]) await ans(pid, v);
   await seg('act4');
   // 第四幕：被抓一次（復活），然後逃出去
   await p.request({ t: 'catch', uid: p.uid }); await p.request({ t: 'caught' });
   await ans('P26', ['A', 'B']); await ans('P28', 'LSSLLSL');
   for (const cell of [[1, 5], [1, 4], [2, 4], [2, 3], [3, 3], [3, 2], [3, 1], [4, 1], [4, 0]]) await p.request({ t: 'answer', pid: 'P29', value: { cell } });
   const end = await seg('epilogue');
-  assert.equal(end.result.notes, 4); assert.equal(end.result.cyril, 'hide'); assert.equal(end.result.caught, 1); assert.ok(end.result.time > 0);
+  assert.equal(end.result.notes, 2); assert.equal(end.result.cyril, 'tear'); assert.equal(end.result.rescued, 8); assert.equal(end.result.caught, 1); assert.ok(end.result.time > 0);
   await sleep(200);
   const save = await (await fetch(`${base}/api/me`, { headers: auth })).json();
-  assert.deepEqual(save.cleared, [1]); assert.equal(save.ch1.notes, 4); assert.equal(save.ch1.char, 'yuexi'); assert.equal(save.ch1First.code, code);
+  assert.deepEqual(save.cleared, [1]); assert.equal(save.ch1.notes, 2); assert.equal(save.ch1.char, 'yuexi'); assert.equal(save.ch1First.code, code);
   assert.equal(save.last, undefined); // 通關了，選單不再顯示「繼續」
   assert.equal((await fetch(`${base}/api/me`)).status, 401);
   p.close();
 });
 
-test('第三幕多人：電腦控制的學院的題目，其他人也可以做（不會卡在前廳）', async () => {
-  const code = await create('前廳甲');
-  const a = await player(code, '前廳甲'), b = await player(code, '前廳乙');
-  await a.request({ t: 'char', char: 'elora' }); await b.request({ t: 'char', char: 'vaughn' }); // 格里莫瓦、烏洛波斯由電腦控制
-  await a.request({ t: 'ready', ready: true }); await b.request({ t: 'ready', ready: true }); await a.request({ t: 'start' });
-  await a.request({ t: 'dev', segment: 'act3c' });
-  assert.equal((await a.request({ t: 'answer', pid: 'P20', value: 'done' })).error, 'not_your_house'); // 貝爾蒙特有人扮演（沃恩）
-  let w = (await b.request({ t: 'answer', pid: 'P21', value: { weigh: { left: [0, 1, 2], right: [3, 4, 5] } } })).reply.result; // 烏洛波斯沒人扮演
-  assert.ok(['left', 'right', 'equal'].includes(w));
-  a.close(); b.close();
-});

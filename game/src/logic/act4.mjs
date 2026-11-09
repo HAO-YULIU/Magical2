@@ -22,7 +22,7 @@ const fmt = (ms) => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${Str
 function summary(r) {
   if (!r) return [];
   const min = Math.round(r.time / 60000), time = min >= 60 ? t('time_hm', { h: Math.floor(min / 60), m: min % 60 }) : t('time_m', { m: min });
-  const rows = [[t('res_time'), time], [t('res_notes'), `${r.notes} / 4`], [t('res_cyril'), t(r.cyril === 'show' ? 'res_cyril_show' : 'res_cyril_hide')],
+  const rows = [[t('res_time'), time], [t('res_notes'), `${r.notes} / 2`], [t('res_cyril'), t(r.cyril === 'tell' ? 'res_cyril_show' : 'res_cyril_hide')], [t('res_rescued'), `${r.rescued ?? 0} / 8`],
     [t('res_caught'), String(r.caught)], [t('res_hints'), String(r.hints)], [t('res_retries'), String(r.retries)]];
   return [el('table', { class: 'result' }, ...rows.map(([k, v]) => el('tr', {}, el('th', { text: k }), el('td', { text: v }))))];
 }
