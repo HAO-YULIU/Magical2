@@ -143,6 +143,13 @@ export function createCh2Scene(scene, conn) {
   const relief = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.18, 10, 24, Math.PI * 1.85), new THREE.MeshStandardMaterial({ color: '#4a6a4a', metalness: 0.4, roughness: 0.6 })); put(relief, -20, 102.25, 0, 1.6);
   let aldricDead = false;
   const killAldric = () => { if (aldricDead) return; aldricDead = true; prints.visible = true; buildVictim(root, -22, 108.4, [0, 1], { seed: 91, model: 'aldric', robe: '#3a1a2a' }).catch(() => {}); bloodPool(root, -22, 108.6, 1.4, { seed: 92 }); };
+  // 大廳東牆的大鐘（Q22：停在十二點）
+  { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#e8dcc0'; g.beginPath(); g.arc(128, 128, 124, 0, 7); g.fill(); g.strokeStyle = '#3a2a18'; g.lineWidth = 8; g.stroke(); g.fillStyle = '#2a1e12'; g.font = '26px serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'].forEach((n, i) => { const a = (i / 12) * Math.PI * 2 - Math.PI / 2; g.fillText(n, 128 + Math.cos(a) * 98, 128 + Math.sin(a) * 98); });
+    g.lineWidth = 7; g.beginPath(); g.moveTo(128, 128); g.lineTo(128, 50); g.stroke(); g.lineWidth = 5; g.beginPath(); g.moveTo(128, 128); g.lineTo(128, 70); g.stroke();
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    const face = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 })); put(face, 9.76, 118, -Math.PI / 2, 3.2);
+    const box = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.2, 2.4), new THREE.MeshStandardMaterial({ color: '#3a2618', roughness: 0.8 })); put(box, 9.95, 118, 0, 2.1); }
   // 大廳的地板：一圈 I～XII 的石磚（Q22）
   { const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'); g.strokeStyle = '#8a7a5a'; g.lineWidth = 4; g.beginPath(); g.arc(256, 256, 230, 0, 7); g.stroke(); g.fillStyle = '#c8b890'; g.font = '34px serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
     ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'].forEach((n, i) => { const a = (i / 12) * Math.PI * 2 - Math.PI / 2; g.fillText(n, 256 + Math.cos(a) * 190, 256 + Math.sin(a) * 190); });

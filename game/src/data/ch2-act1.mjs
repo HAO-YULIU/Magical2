@@ -175,7 +175,7 @@ const A3 = [
   // ---- 校長倒下之後 ----
   { id: 'q20_blood', room: 'banquet', kind: 'puzzle', puzzle: 'Q20', x: -22, z: 108.4, size: [1.6, 0.1, 1.6], solid: false, label: L('校長倒下的地方（血裡畫了東西）', 'Where the headmaster fell (something drawn in the blood)') },
   { id: 'q21_scales', room: 'banquet', kind: 'puzzle', puzzle: 'Q21', x: -20, z: 102.4, size: [2.4, 2.4, 0.3], y: 1, solid: false, label: L('牆上的銜尾蛇浮雕（12 片鱗）', 'The serpent relief on the wall (12 scales)') },
-  { id: 'q22_clock', room: 'hall', kind: 'puzzle', puzzle: 'Q22', x: 0, z: 110.6, size: [2, 3, 0.4], y: 2, solid: false, label: L('大廳的大鐘（停在十二點）', 'The great clock in the hall (stopped at twelve)') },
+  { id: 'q22_clock', room: 'hall', kind: 'puzzle', puzzle: 'Q22', x: 9.6, z: 118, size: [0.4, 3, 2], y: 2, solid: false, label: L('大廳的大鐘（停在十二點）', 'The great clock in the hall (stopped at twelve)') },
   { id: 'to_hall', room: 'banquet', kind: 'goto', to: CH2_A3_SPAWNS.hall, needs: 'Q21', x: -10.3, z: 125, size: [0.4, 2.6, 4], solid: false, label: L('回大廳', 'Back to the Great Hall') },
   { id: 'floor_xiii', room: 'hall', kind: 'prop', x: 0, z: 124, size: [6, 0.05, 6], solid: false, label: L('地上一圈刻著羅馬數字的石磚', 'A ring of floor tiles carved with numerals'),
     text: L('I 到 XII，一圈十二塊。沒有 XIII。月光從高窗斜斜照進來，柱子的影子落在石磚上。', 'I to XII — twelve tiles in a ring. No XIII. Moonlight slants in from the high windows; the pillars’ shadows fall across the tiles.') },
