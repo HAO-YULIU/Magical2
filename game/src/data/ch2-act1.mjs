@@ -149,3 +149,35 @@ const A2 = [
   { id: 'c2_page', room: 'archive', kind: 'puzzle', puzzle: 'C2', x: 74, z: 42.4, size: [0.8, 1, 0.6], solid: false, label: L('1871 號抽屜：副校長莫瑞的檔案', 'Drawer 1871: Vice-Principal Moray’s file') },
 ];
 CH2_THINGS.push(...A2.map((x) => ({ hidden: true, ...x })));
+
+// ================= 第三幕：典禮廳・萬聖晚宴（A）、校長倒下之後（B） =================
+// 典禮廳沿用第一章（x -34～-10、z 102～148），長桌第 1～3 張各放兩壺南瓜汁（壺 1、2 在第 1 桌……）
+export const JUGS = [1, 2, 3, 4, 5, 6].map((k) => { const tb = Math.ceil(k / 2); return { k, tb, x: -30 + (tb - 1) * 5.5, z: k % 2 ? 118 : 132 }; });
+export const FIRSTYEARS = [[-27.2, 112], [-21.7, 138], [-16.2, 116], [-27.2, 144], [-11.6, 108], [-16.2, 140], [-21.7, 106], [-32.6, 130]]; // 躲在桌子底下、柱子後面（6、7 號：Q17 指錯會蝕化）
+export const SIDE_DOOR = { x: -33.7, z: 105 };
+export const CHANDELIER_FAR = { x: -22, z: 145.5 };
+export const CH2_A3_SPAWNS = { act3a: { x: -11.4, z: 125, yaw: Math.PI / 2 }, act3b: { x: -22, z: 112, yaw: 0 }, hall: { x: 0, z: 128, yaw: Math.PI } };
+// 第三幕 B：面具人的血腳印（從校長倒下的地方走到牆邊），方向＝時鐘的點數（北＝12）
+export const FOOTPRINTS = [[-22, 107.6, 12], [-21.4, 106.8, 2], [-20.6, 106.4, 3], [-20, 105.6, 5], [-20, 104.6, 6]];
+
+const A3 = [
+  // ---- 晚宴（遇襲前）----
+  ...JUGS.map((j) => ({ id: `jug${j.k}`, room: 'banquet', kind: 'jug', jug: j.k, x: j.x, z: j.z, size: [0.6, 0.9, 0.6], y: 0.8, solid: false,
+    label: L(`第 ${j.k} 壺南瓜汁（打翻它）`, `Jug ${j.k} of pumpkin juice (knock it over)`) })),
+  ...[1, 2, 3].map((tb) => ({ id: `gossip${tb}`, room: 'banquet', kind: 'gossip', table: tb, x: -30 + (tb - 1) * 5.5 + 1.2, z: 125, size: [0.6, 1.6, 0.6], solid: false,
+    label: L(`第 ${tb} 桌的學生（聽他們說話）`, `Students at table ${tb} (listen)`) })),
+  { id: 'mycup', room: 'banquet', kind: 'mycup', x: -14, z: 141, size: [0.8, 1, 0.8], solid: false, label: L('你的座位：一杯南瓜汁', 'Your seat: a cup of pumpkin juice') },
+  // ---- 遇襲後 ----
+  { id: 'q18_chandelier', room: 'banquet', kind: 'lure', x: CHANDELIER_FAR.x, z: CHANDELIER_FAR.z, size: [2, 1, 2], solid: false, label: L('最裡面的吊燈（打下來）', 'The far chandelier (bring it down)') },
+  { id: 'decoy_armor', room: 'banquet', kind: 'decoy', x: -12, z: 104, size: [0.8, 2, 0.8], solid: true, label: L('盔甲（推倒）', 'A suit of armour (push it over)') },
+  { id: 'q19_door', room: 'banquet', kind: 'puzzle', puzzle: 'Q19', x: SIDE_DOOR.x, z: SIDE_DOOR.z, size: [0.3, 2.6, 2.4], solid: false, label: L('側門的魔法鎖（赫爾嘉夫人在門外）', 'The side door’s seal (Madam Helga is outside)') },
+  ...FIRSTYEARS.map(([x, z], i) => ({ id: `fy${i}`, room: 'banquet', kind: 'firstyear', kid: i, x, z, size: [0.8, 0.8, 0.8], solid: false, label: L('躲起來的低年級生（安撫他、帶他出去）', 'A hiding first-year (calm them, lead them out)') })),
+  // ---- 校長倒下之後 ----
+  { id: 'q20_blood', room: 'banquet', kind: 'puzzle', puzzle: 'Q20', x: -22, z: 108.4, size: [1.6, 0.1, 1.6], solid: false, label: L('校長倒下的地方（血裡畫了東西）', 'Where the headmaster fell (something drawn in the blood)') },
+  { id: 'q21_scales', room: 'banquet', kind: 'puzzle', puzzle: 'Q21', x: -20, z: 102.4, size: [2.4, 2.4, 0.3], y: 1, solid: false, label: L('牆上的銜尾蛇浮雕（12 片鱗）', 'The serpent relief on the wall (12 scales)') },
+  { id: 'q22_clock', room: 'hall', kind: 'puzzle', puzzle: 'Q22', x: 0, z: 110.6, size: [2, 3, 0.4], y: 2, solid: false, label: L('大廳的大鐘（停在十二點）', 'The great clock in the hall (stopped at twelve)') },
+  { id: 'to_hall', room: 'banquet', kind: 'goto', to: CH2_A3_SPAWNS.hall, needs: 'Q21', x: -10.3, z: 125, size: [0.4, 2.6, 4], solid: false, label: L('回大廳', 'Back to the Great Hall') },
+  { id: 'floor_xiii', room: 'hall', kind: 'prop', x: 0, z: 124, size: [6, 0.05, 6], solid: false, label: L('地上一圈刻著羅馬數字的石磚', 'A ring of floor tiles carved with numerals'),
+    text: L('I 到 XII，一圈十二塊。沒有 XIII。月光從高窗斜斜照進來，柱子的影子落在石磚上。', 'I to XII — twelve tiles in a ring. No XIII. Moonlight slants in from the high windows; the pillars’ shadows fall across the tiles.') },
+];
+CH2_THINGS.push(...A3.map((x) => ({ hidden: !['decoy_armor'].includes(x.id), ...x })));

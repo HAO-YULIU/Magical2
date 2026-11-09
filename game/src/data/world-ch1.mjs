@@ -4,7 +4,7 @@
 
 import { LIB_ROOMS, LIB_DOORS, LIB_THINGS, LIB_SPAWNS } from './library-ch1.mjs';
 import { A4_ROOMS, A4_DOORS, A4_THINGS, A4_SPAWN } from './act4-ch1.mjs';
-import { CH2_ROOMS, CH2_DOORS, CH2_THINGS, CH2_SPAWNS, CH2_PATROL, CH2_A2_ROOMS, CH2_A2_SPAWNS } from './ch2-act1.mjs';
+import { CH2_ROOMS, CH2_DOORS, CH2_THINGS, CH2_SPAWNS, CH2_PATROL, CH2_A2_ROOMS, CH2_A2_SPAWNS, CH2_A3_SPAWNS } from './ch2-act1.mjs';
 
 const L = (zh, en) => ({ zh, en });
 
@@ -199,4 +199,6 @@ for (let i = THINGS.length - 1; i >= 0; i--) if (CH1_ONLY.has(THINGS[i].id)) THI
 ROOMS.push(...CH2_ROOMS, ...CH2_A2_ROOMS);
 DOORS.push(...CH2_DOORS);
 THINGS.push(...CH2_THINGS);
-SPAWNS.prologue = CH2_SPAWNS.prologue; SPAWNS.act1 = CH2_SPAWNS.act1; SPAWNS.hall = CH2_SPAWNS.hall; SPAWNS.act2 = CH2_A2_SPAWNS.act2;
+SPAWNS.prologue = CH2_SPAWNS.prologue; SPAWNS.act1 = CH2_SPAWNS.act1; SPAWNS.hall = CH2_SPAWNS.hall; SPAWNS.act2 = CH2_A2_SPAWNS.act2; SPAWNS.act3a = CH2_A3_SPAWNS.act3a; SPAWNS.act3b = CH2_A3_SPAWNS.act3b;
+// 典禮廳的四張長桌：第一章是聽傳聞（P02），第二章只是長桌（晚宴的擺設在 ch2scene.mjs）
+for (const th of THINGS) if (/^table\d$/.test(th.id)) { th.kind = 'prop'; th.text = L('長桌上擺滿南瓜派、烤雞和一壺壺南瓜汁。', 'The long table is laden with pumpkin pies, roast fowl and jug after jug of pumpkin juice.'); delete th.rumor; }

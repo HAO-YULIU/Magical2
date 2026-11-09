@@ -154,7 +154,7 @@ export const BUILD_CH2 = {
     let stop = false; panel.onClose = () => { stop = true; };
     const play = async () => {
       seq.textContent = '';
-      for (const [w, word] of CODE.entries()) { for (const ch of word) { if (stop) return; lamp.classList.add('on'); sfx('step'); seq.textContent += ch === '-' ? '－' : '・'; await new Promise((r) => setTimeout(r, ch === '-' ? 650 : 220)); lamp.classList.remove('on'); await new Promise((r) => setTimeout(r, 260)); } if (w < CODE.length - 1) { seq.textContent += '　／　'; await new Promise((r) => setTimeout(r, 700)); } }
+      for (const [w, word] of CODE.entries()) { for (const ch of word) { if (stop) return; lamp.classList.add('on'); sfx('heartbeat'); seq.textContent += ch === '-' ? '－' : '・'; await new Promise((r) => setTimeout(r, ch === '-' ? 650 : 220)); lamp.classList.remove('on'); await new Promise((r) => setTimeout(r, 260)); } if (w < CODE.length - 1) { seq.textContent += '　／　'; await new Promise((r) => setTimeout(r, 700)); } }
     };
     const inp = el('input', { maxlength: '8', placeholder: '????' }); inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') submit(inp.value.trim()); };
     body.append(el('p', { class: 'dim', text: T('水晶裡沒有說話的聲音，只有心跳。有長有短。', 'No voice in the crystal — only a heartbeat, long and short.') }), lamp, seq,
@@ -177,6 +177,45 @@ export const BUILD_CH2 = {
     body.append(el('p', { text: T('副校長塞巴斯汀・莫瑞的檔案。二十年前，他和諾克斯同一年住進醫務室，症狀一樣。最後一頁蓋著銜尾蛇的印記——銜尾會。', 'Vice-Principal Sebastian Moray’s file. Twenty years ago he was admitted the same year as Knox, with the same symptoms. The last page bears the stamp of a serpent eating its tail — the Ouroboros Society.') }),
       el('p', { class: 'dim', text: playersHaveCyril ? T('（你是西里爾。這是你父親。）', '(You are Cyril. This is your father.)') : T('（電腦控制的西里爾看著你，等你替他決定。）', '(The computer-controlled Cyril looks at you, waiting for you to decide for him.)') }),
       el('div', { class: 'row' }, el('button', { text: T('告訴大家', 'Tell everyone'), onclick: () => submit('tell') }), el('button', { text: T('撕掉那一頁', 'Tear out the page'), onclick: () => submit('tear') })));
+  },
+
+  // ===== 第三幕 =====
+  // Q19：側門的符文——赫爾嘉夫人在門外描述形狀，你照順序畫（點）出符文
+  Q19(body, { conn, submit }) {
+    const RUNES = [['algiz', 'ᛉ'], ['mannaz', 'ᛗ'], ['sowilo', 'ᛊ'], ['uruz', 'ᚢ'], ['kenaz', 'ᚲ'], ['ingwaz', 'ᛜ'], ['tiwaz', 'ᛏ'], ['gebo', 'ᚷ'], ['fehu', 'ᚠ'], ['isa', 'ᛁ'], ['laguz', 'ᛚ'], ['othala', 'ᛟ']];
+    const said = el('ol', { class: 'hints' }), drawn = []; const show = el('p', { class: 'ch2-runes-drawn' });
+    const paint = () => { show.textContent = drawn.map((id) => RUNES.find((r) => r[0] === id)[1]).join('  ') || '—'; };
+    conn.request({ t: 'peek', pid: 'Q19' }).then((r) => { if (r.t === 'peek') r.content.desc.forEach((d) => said.append(el('li', { text: `${T('夫人', 'Helga')}：「${d}」` }))); else said.append(el('li', { text: T('門外沒有聲音。', 'No sound from beyond the door.') })); });
+    paint();
+    body.append(el('p', { class: 'dim', text: T('門被魔蝕封住了。赫爾嘉夫人隔著門，一個一個說出符文的樣子；你要照順序在門上畫出來（從兩邊同時畫才打得開）。', 'The door is sealed by the Blight. Through it, Madam Helga describes the runes one by one; draw them on the door in order (both sides at once, or it won’t open).') }),
+      said, show, el('div', { class: 'ch2-runes' }, ...RUNES.map(([id, sym]) => el('button', { text: sym, onclick: () => { if (drawn.length < 4) { drawn.push(id); paint(); } } }))),
+      el('div', { class: 'row' }, el('button', { class: 'small', text: T('擦掉重畫', 'Wipe and redraw'), onclick: () => { drawn.length = 0; paint(); } }), answerBtn(() => submit(drawn.join(',')))));
+  },
+  // Q20：血裡的符號＋牆上的四個學院徽記（銜尾蛇可以轉）
+  Q20(body, { submit }) {
+    body.append(el('p', { text: T('光照咒照下去，血滲進石縫的地方發出微光：一條蛇。但牠的頭和尾巴沒有咬在一起——中間空了一格。', 'Under the light spell, the blood seeped into the cracks glows: a serpent. But its head and tail do not meet — there is a gap between them.') }),
+      el('p', { class: 'dim', text: T('牆上的四個學院徽記，只有銜尾蛇那一個可以轉。要轉成什麼樣子？', 'Of the four house crests on the wall, only the serpent turns. How should it sit?') }),
+      el('div', { class: 'row wrap' },
+        el('button', { text: T('◎ 頭咬著尾巴（原本的樣子）', '◎ Head biting tail (as it is)'), onclick: () => submit('closed') }),
+        el('button', { text: T('ↄ 頭尾分開', 'ↄ Head and tail apart'), onclick: () => submit('open') }),
+        el('button', { text: T('∞ 打一個結', '∞ Twisted into a knot'), onclick: () => submit('knot') })));
+  },
+  // Q21：銜尾蛇浮雕的 12 片鱗（像時鐘），照地上血腳印的方向按 5 片
+  Q21(body, { submit, state }) {
+    if (!state.solved.includes('Q20')) { body.append(el('p', { text: T('浮雕的鱗片都卡死了，按不下去。', 'The scales of the relief are jammed; none will press.') })); return; }
+    const seq = []; const show = el('p', { class: 'ch2-runes-drawn' }); const paint = () => { show.textContent = seq.map((n) => `${n}`).join(' → ') || '—'; };
+    const dial = el('div', { class: 'ch2-dial' });
+    for (let h = 1; h <= 12; h++) { const a = (h / 12) * Math.PI * 2; dial.append(el('button', { text: String(h), style: `left:${50 + Math.sin(a) * 40}%;top:${50 - Math.cos(a) * 40}%`, onclick: () => { if (seq.length < 5) { seq.push(h); paint(); } } })); }
+    paint();
+    body.append(el('p', { class: 'dim', text: T('浮雕旁的小字：「照著他走的路，摸到牆上相同方向的鱗。」地上有一串血腳印，從校長倒下的地方走到牆邊。（北＝12 點）', 'Small letters by the relief: “Follow the path he walked; touch the scale that faces the same way.” A line of bloody footprints runs from where the headmaster fell to the wall. (North = 12 o’clock)') }),
+      dial, show, el('div', { class: 'row' }, el('button', { class: 'small', text: T('重來', 'Start over'), onclick: () => { seq.length = 0; paint(); } }), answerBtn(() => submit(seq.join(',')))));
+  },
+  // Q22：大廳的大鐘（停在 12 點）——撥到「第十三響」
+  Q22(body, { submit }) {
+    let h = 12; const face = el('div', { class: 'ch2-clock', text: '12:00' });
+    const set = (d) => { h = ((h - 1 + d + 12) % 12) + 1; face.textContent = `${h}:00`; };
+    body.append(el('p', { class: 'dim', text: T('大鐘停在十二點整，晚宴遇襲的那一刻。月光從高窗照進來，柱子的影子會跟著鐘的時間移動。紙條上寫著：「十三號，地窖。」', 'The great clock stopped at twelve sharp — the moment the feast was attacked. Moonlight slants in; the pillars’ shadows move with the clock. The note said: “Thirteen. The cellar.”') }),
+      face, el('div', { class: 'row' }, el('button', { text: '◀', onclick: () => set(-1) }), el('button', { text: '▶', onclick: () => set(1) }), el('button', { class: 'primary small', text: T('就停在這裡', 'Stop it here'), onclick: () => submit(String(h)) })));
   },
 
 };

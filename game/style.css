@@ -550,3 +550,10 @@ body.bigtext #caption { font-size: 20px; } body.bigtext #toast { font-size: 18px
 .ch2-tag { position: relative; width: 220px; height: 90px; margin: 10px auto; background: #8a6a2c; border-radius: 8px 30px 30px 8px; display: grid; place-items: center; overflow: hidden; }
 .ch2-tag .top { position: absolute; font: bold 52px serif; color: #2a1a08; clip-path: inset(0 0 52% 0); letter-spacing: 6px; }
 .ch2-tag .shadow { position: absolute; font: bold 52px serif; color: rgba(0, 0, 0, 0.45); clip-path: inset(52% 0 0 0); transform: translate(6px, 4px) skewX(-12deg); filter: blur(1.2px); letter-spacing: 6px; }
+
+#feasthud { position: fixed; top: 10px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 6px 16px; border-radius: 20px; background: rgba(60, 0, 10, 0.75); border: 1px solid #a0303a; color: #ffd8d8; font: 16px serif; letter-spacing: 1px; text-shadow: 0 0 6px #f00; pointer-events: none; }
+.ch2-runes { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin: 8px 0; }
+.ch2-runes button { font-size: 26px; padding: 6px 0; }
+.ch2-runes-drawn { text-align: center; font-size: 28px; letter-spacing: 6px; min-height: 36px; color: #e8d8ff; }
+.ch2-dial { position: relative; width: 220px; height: 220px; margin: 10px auto; border-radius: 50%; border: 2px solid #5a8a5a; background: radial-gradient(#1a2a1a, #0a120a); }
+.ch2-dial button { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; padding: 0; font-size: 14px; }

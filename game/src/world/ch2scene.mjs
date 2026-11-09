@@ -1,12 +1,12 @@
 // 第二章的場景擺設（帳號二，2026-11-05）：萬聖節布置（大廳、交誼廳）、Q02 的南瓜燈、魔藥學教室、溫室（Q06 的異常、標記）。
 // 房間的牆、地板由 greybox 依 data/world-ch1.mjs 的 ROOMS 自動蓋；這裡只放擺設。美術在 art/ch2/。
 import * as THREE from 'three';
-import { jackOLantern, tickPumpkins } from '../art/ch2/halloween.mjs';
+import { jackOLantern, tickPumpkins, dressHalloweenHall } from '../art/ch2/halloween.mjs';
 import { drape, rollBook, blackPlant, hospitalBed, filingCabinet } from '../art/ch2/ch2props.mjs';
 import { loadCharacter } from '../art/characters.mjs';
 import { buildVictim, bloodPool, bloodTrail } from '../art/gore.mjs';
-import { cauldron, blackboard, ingredientShelf, sprinklerRig } from '../art/ch2/ch2rooms.mjs';
-import { PUMPKIN_GRID, PUMPKIN_AT, GREEN_SPOT_AT, BEDS, ARCHIVE_ROWS } from '../data/ch2-act1.mjs';
+import { cauldron, blackboard, ingredientShelf, sprinklerRig, juiceJug, gobletSet } from '../art/ch2/ch2rooms.mjs';
+import { PUMPKIN_GRID, PUMPKIN_AT, GREEN_SPOT_AT, BEDS, ARCHIVE_ROWS, JUGS, SIDE_DOOR, CHANDELIER_FAR, FOOTPRINTS } from '../data/ch2-act1.mjs';
 
 // Q02：照格子畫指定的眼睛和嘴巴（貼圖的 u＝0.25 是正前方）
 function faceTex(eye, mouth, glow) {
@@ -124,6 +124,30 @@ export function createCh2Scene(scene, conn) {
   let corpse = false;
   const showCorpse = () => { if (corpse) return; corpse = true; buildVictim(root, 78.6, 46.4, [-1, 0], { seed: 77, model: 'helga', robe: '#d8d0c0' }).catch(() => {}); bloodTrail(root, { x: 80, z: 46.2 }, { x: 74, z: 45 }, { width: 0.8, seed: 78, hands: 2 }); bloodPool(root, 79.6, 46.3, 1.0, { seed: 79 }); };
 
+  // ---- 第三幕：典禮廳的萬聖晚宴（x -34～-10、z 102～148）----
+  const hall3 = dressHalloweenHall({ room: { x: [-34, -10], z: [102, 148], h: 14 }, tables: [0, 1, 2, 3].map((i) => [-30 + i * 5.5, 110, 140]), tableH: 0.8, drapeEvery: 6 }, drape);
+  root.add(hall3.group); ticks.push(hall3.tick);
+  const jugs = {};
+  for (const j of JUGS) { const jg = juiceJug({ drugged: false }); jg.scale.setScalar(1.3); put(jg, j.x, j.z, 0, 0.8); jugs[j.k] = jg; const gs = gobletSet(4, { seed: j.k }); put(gs, j.x - 0.5, j.z + 1.2, Math.PI / 2, 0.8); }
+  // 最裡面的吊燈（Q18：砸下來）
+  const chand = new THREE.Group(); const ring = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.08, 8, 32), new THREE.MeshStandardMaterial({ color: '#3a2a18', metalness: 0.7, roughness: 0.4 })); ring.rotation.x = Math.PI / 2; chand.add(ring);
+  for (let k = 0; k < 8; k++) { const a = (k / 8) * Math.PI * 2; const p = jackOLantern({ size: 0.3, face: k % 4 }); p.position.set(Math.cos(a) * 1.4, 0.05, Math.sin(a) * 1.4); chand.add(p); }
+  const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 4, 6), new THREE.MeshStandardMaterial({ color: '#2a2420', metalness: 0.8 })); chain.position.y = 2; chand.add(chain);
+  put(chand, CHANDELIER_FAR.x, CHANDELIER_FAR.z, 0, 9);
+  // 側門（Q19）：門上一層黑紫色的封印
+  const sd = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 2.6), new THREE.MeshStandardMaterial({ color: '#2a1030', emissive: '#300a40', emissiveIntensity: 0.8, roughness: 0.4, transparent: true, opacity: 0.85 })); put(sd, SIDE_DOOR.x + 0.08, SIDE_DOOR.z, Math.PI / 2, 1.3);
+  // 第三幕 B：血腳印、校長的屍體、銜尾蛇浮雕
+  const footTex = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 128; const g = c.getContext('2d'); g.fillStyle = '#5a0606'; g.beginPath(); g.ellipse(32, 80, 18, 34, 0, 0, 7); g.fill(); g.beginPath(); g.ellipse(32, 26, 14, 18, 0, 0, 7); g.fill(); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t; })();
+  const prints = new THREE.Group(); prints.visible = false; root.add(prints);
+  for (const [x, z, h] of FOOTPRINTS) { const m = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.32), new THREE.MeshStandardMaterial({ map: footTex, transparent: true, depthWrite: false, roughness: 0.3 })); m.rotation.x = -Math.PI / 2; m.rotation.z = -(h / 12) * Math.PI * 2; m.position.set(x, 0.02, z); prints.add(m); }
+  const relief = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.18, 10, 24, Math.PI * 1.85), new THREE.MeshStandardMaterial({ color: '#4a6a4a', metalness: 0.4, roughness: 0.6 })); put(relief, -20, 102.25, 0, 1.6);
+  let aldricDead = false;
+  const killAldric = () => { if (aldricDead) return; aldricDead = true; prints.visible = true; buildVictim(root, -22, 108.4, [0, 1], { seed: 91, model: 'aldric', robe: '#3a1a2a' }).catch(() => {}); bloodPool(root, -22, 108.6, 1.4, { seed: 92 }); };
+  // 大廳的地板：一圈 I～XII 的石磚（Q22）
+  { const c = document.createElement('canvas'); c.width = c.height = 512; const g = c.getContext('2d'); g.strokeStyle = '#8a7a5a'; g.lineWidth = 4; g.beginPath(); g.arc(256, 256, 230, 0, 7); g.stroke(); g.fillStyle = '#c8b890'; g.font = '34px serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'].forEach((n, i) => { const a = (i / 12) * Math.PI * 2 - Math.PI / 2; g.fillText(n, 256 + Math.cos(a) * 190, 256 + Math.sin(a) * 190); });
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const m = new THREE.Mesh(new THREE.CircleGeometry(3, 48), new THREE.MeshStandardMaterial({ map: t, transparent: true, depthWrite: false, roughness: 0.8 })); m.rotation.x = -Math.PI / 2; put(m, 0, 124, 0, 0.02); }
+
   // 每一格：燭光、大釜冒泡、找錯時植物抖一下
   let last = performance.now(), fetched = false;
   (function loop(now) {
@@ -137,6 +161,10 @@ export function createCh2Scene(scene, conn) {
     mark, stare,
     hideOwen() { if (owen) owen.visible = false; }, // 歐文下去暗門之後就不在醫務室了
     showCorpse, // Q13 打開鐵櫃之後
+    killAldric, // 第三幕 B 開始
+    knockJug(k) { const j = jugs[k]; if (j) { j.rotation.z = Math.PI / 2; j.position.y = 0.85; } }, // Q17 打翻
+    dropChandelier() { chand.position.y = 0.3; chand.rotation.z = 0.25; }, // Q18
+    openSideDoor() { sd.visible = false; }, // Q19
     // 第一幕開始時：問伺服器溫室的異常（畫出來）
     async enterAct1() { if (fetched) return; fetched = true; const r = await conn.request({ t: 'peek', pid: 'Q06' }); if (r.t === 'peek') applyAnomalies(r.content.spots); },
   };

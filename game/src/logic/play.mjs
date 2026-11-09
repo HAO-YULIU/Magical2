@@ -20,6 +20,7 @@ import { CREDITS } from '../data/credits.mjs';
 import { createAct2 } from './act2.mjs';
 import { createAct3 } from './act3.mjs';
 import { createCh2 } from './ch2act1.mjs';
+import { createCh2Act3 } from './ch2act3.mjs';
 import { createCh2Scene } from '../world/ch2scene.mjs';
 import { createAct4 } from './act4.mjs';
 import { createScares } from '../world/scares.mjs';
@@ -89,6 +90,7 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
   const act3 = createAct3({ world, conn, toast, say, S, myChar: () => me()?.char, solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); }, serverNow: () => Date.now() + clockOffset });
   const ch2scene = createCh2Scene(world.scene, conn); // 第二章：萬聖節布置、魔藥學教室與溫室的擺設
   const ch2 = createCh2({ conn, toast, say, S, myHouse, scene: ch2scene, solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); } });
+  const ch2a3 = createCh2Act3({ world, conn, toast, say, S, myUid, playScript: (k) => play(k), scene: ch2scene, myChar: () => me()?.char, serverNow: () => Date.now() + clockOffset, solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); } });
   const act4 = createAct4({ world, conn, toast, say, talking, S, myUid, myChar: () => me()?.char, receiver, serverNow: () => Date.now() + clockOffset, holding: () => holding, dev, playScript: (k) => play(k), finale,
     solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); } });
   if (dev) window.__ml = { myUid, receiver, world, conn, sent: 0, notes, heard, act2, act3, act4, get state() { return S(); } };
@@ -100,7 +102,7 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     else if (seg === 'act1') { world.teleport(SPAWNS.act1); ch2scene.enterAct1(); }
     else if (seg === 'act2') world.teleport(SPAWNS.act2); // 第二章：醫務室（第一章的長廊不用了）
     else if (seg === 'act3a') world.teleport(SPAWNS.act3a);
-    else if ((seg === 'act3b' || seg === 'act3c') && first) world.teleport(SPAWNS[seg]); // 重新連線時才傳送（平常是走過去的）
+    else if (seg === 'act3b') world.teleport(SPAWNS.act3b); // 第二章：校長倒下之後，在教師席前面
     else if (seg === 'act4') act4.begin(false);
     else if (seg === 'epilogue') return act4.end(); // 尾聲的劇情由 act4 排順序
     play(`segment:${seg}`);
@@ -124,6 +126,9 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     if (st.solved?.includes('Q10')) ch2scene.hideOwen(); // 第二章：重新連線時場景跟上進度
     if (st.solved?.includes('Q13')) ch2scene.showCorpse();
     if (st.segment === 'act1') ch2scene.enterAct1();
+    if (['act3b', 'act4', 'epilogue'].includes(st.segment)) ch2scene.killAldric();
+    if (st.solved?.includes('Q18')) ch2scene.dropChandelier();
+    if (st.solved?.includes('Q19')) ch2scene.openSideDoor();
     clockOffset = (st.now ?? Date.now()) - Date.now();
     const people = st.members.filter((m) => m.uid !== myUid).map((m) => ({ key: m.uid, label: m.name, char: m.char }));
     for (const c of aiChars()) people.push({ key: `ai:${c}`, label: CHARS[c][getLang()], char: c });
@@ -144,6 +149,7 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
     if (pid === 'P29') return; // 屋頂的高潮由 act4.end() 播（守夜人最後那句話只有西里爾聽清楚）
     if (pid === 'Q10') ch2scene.hideOwen?.();
     if (pid === 'Q13') ch2scene.showCorpse?.();
+    if (pid === 'Q18') ch2scene.dropChandelier(); if (pid === 'Q19') ch2scene.openSideDoor();
     if (by === myUid || !['P03', 'P04', 'P05', 'P06', 'P07'].includes(pid)) play(`solved:${pid}`); // 宿舍門鎖只有解開的人看得到
   }
 
@@ -159,7 +165,7 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
       if (tg.needs && !S().solved.includes(tg.needs)) return toast(getLang() === 'en' ? 'Not yet — look at the mirror first.' : '先看看鏡子上寫了什麼。');
       world.teleport(tg.to); return;
     }
-    if (ch2.interact(tg)) return;
+    if (ch2.interact(tg) || ch2a3.interact(tg)) return;
     if (tg.kind === 'mirrorfog') { if (mirrors.breathe(tg.id)) setTimeout(() => play('mirror'), 2500); return; }
     if (tg.kind === 'plaques') return openPanel(L(tg.label), (body) => body.append(el('ul', { class: 'plaques' }, ...HEADMASTERS.map((h) => el('li', { text: L(h) })))));
     if (tg.kind === 'prop' && tg.text) return say([[null, tg.text.zh, tg.text.en]]);
@@ -290,6 +296,7 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
       } else world.placeAvatar(key, 0, 0, 0, false);
     });
     if (segment === 'act2') act2.frame(dt, mine);
+    ch2a3.frame(dt, mine, segment); // 第二章：晚宴（倒數、蝕化學生、低年級生）
     if (segment?.startsWith('act3') || segment === 'act4') act3.wake();
     if (segment?.startsWith('act3')) act3.frame(dt, mine, segment);
     const hideState = act4.frame(dt, mine, segment);
