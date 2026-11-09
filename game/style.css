@@ -569,3 +569,7 @@ body.bigtext #caption { font-size: 20px; } body.bigtext #toast { font-size: 18px
 #a4call { position: fixed; top: 27%; left: 50%; transform: translateX(-50%); z-index: 60; padding: 12px 22px; max-width: 90vw; text-align: center;
   font: bold 22px serif; color: #ffd0ff; background: rgba(30, 0, 30, 0.82); border: 2px solid #c8a0ff; border-radius: 8px; box-shadow: 0 0 30px #a040ff88; pointer-events: none; animation: a4call 0.6s ease-in-out infinite alternate; }
 @keyframes a4call { from { box-shadow: 0 0 12px #a040ff55; } to { box-shadow: 0 0 40px #c060ffcc; } }
+/* 第二章救援題 R2：撕碎的點名簿 */
+.torn { display: grid; grid-template-columns: repeat(3, 84px); gap: 3px; justify-content: center; margin: 10px 0; }
+.torn button { width: 84px; height: 84px; padding: 0; border: 1px solid #5a4a30; border-radius: 2px; background-repeat: no-repeat; }
+.torn button.sel { outline: 3px solid #e0c060; }

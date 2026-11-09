@@ -1,7 +1,8 @@
 // 答案判斷的單元測試：每一題的正確答案要對、錯誤答案要錯
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { judge, hint, struckWord, circledChar, greenSpots, SEATS, xrayPuzzle, juicePuzzle, runePuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
+import { judge, hint, struckWord, circledChar, greenSpots, SEATS, xrayPuzzle, juicePuzzle, runePuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS, HERB_CURE } from '../../server/judge.mjs';
+import { readFileSync } from 'node:fs';
 import { CHAPTER1 } from '../../data/puzzles/ch1.mjs';
 import { CHAPTER2, STRUCK } from '../../data/puzzles/ch2.mjs';
 
@@ -55,12 +56,18 @@ test('第四幕：樓梯的燈（Q26）兩種按法都對；點名簿（Q24）�
 });
 
 test('救援題、自救題：內容和答案一致', () => {
-  const c3 = rescueContent('R3', 'seed-x', 'k', { house: 'belmont' }).cipher;
-  const plain = ['FREE', 'LIGHT', 'AWAKE', 'BREAK'].find((w) => w.replace(/[A-Z]/g, (ch) => String.fromCharCode((ch.charCodeAt(0) - 65 + 9) % 26 + 65)) === c3);
-  assert.ok(plain);
-  assert.equal(judge('R3', plain, ctx({ seed: 'seed-x', key: 'k' })).solved, true);
+  // 第二章 R3：錄音裡被念兩次的名字（每一組都剛好只有一個重複）
+  for (const k of ['k', 'k2', 'k3', 'k4', 'k5']) {
+    const names = rescueContent('R3', 'seed-x', k).names, dup = names.find((n, i) => names.indexOf(n) !== i);
+    assert.equal(names.length, 8); assert.equal(new Set(names).size, 7);
+    assert.equal(judge('R3', dup, ctx({ seed: 'seed-x', key: k })).solved, true);
+    assert.equal(judge('R3', names.find((n) => n !== dup), ctx({ seed: 'seed-x', key: k })).solved, false);
+  }
+  // R1：黑根上的藥草 → 牆上對照表的解藥材料（畫面上的對照表要跟伺服器一樣）
   const roots = rescueContent('R1', 'seed-x', 'k').roots;
-  const counter = { fire: 'water', wind: 'fire', earth: 'wind', water: 'earth' };
+  const counter = { nightshade: 'silver', wolfsbane: 'moonwort', hemlock: 'mandrake', blackroot: 'batwing' };
+  assert.deepEqual(HERB_CURE, counter);
+  assert.ok(readFileSync(new URL('../../game/src/ui/puzzles.mjs', import.meta.url), 'utf8').includes("[['nightshade', 'silver'], ['wolfsbane', 'moonwort'], ['hemlock', 'mandrake'], ['blackroot', 'batwing']]"));
   assert.equal(judge('R1', roots.map((r) => counter[r]).join(','), ctx({ seed: 'seed-x', key: 'k' })).solved, true);
   const dirs = rescueContent('S2', 'seed-x', 'k').rounds;
   assert.equal(judge('S2', dirs.join(','), ctx({ seed: 'seed-x', key: 'k' })).solved, true);

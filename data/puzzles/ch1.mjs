@@ -187,16 +187,17 @@ export const CHAPTER1 = {
 
 // 救援題（同伴來救）與自救題（被抓的人自己解）：每次被抓時由伺服器抽一題，答案依房間的亂數決定
 export const RESCUE = {
-  R1: { diff: 7, kind: 'counter' },   // 四條黑根上的元素 → 依序給出剋制的元素
-  R2: { diff: 8, kind: 'event' },     // 導管連通（畫面判斷）
-  R3: { diff: 7, kind: 'caesar' },    // 位移數＝被抓者學院的時辰
-  R4: { diff: 8, kind: 'event' },     // 記憶翻牌（畫面判斷）
+  // 第二章（2026-11-09）：魔藥與點名簿
+  R1: { diff: 7, kind: 'counter' },   // 黑根上的四種藥草 → 依序丟進剋制它的材料（牆上有對照表）
+  R2: { diff: 8, kind: 'event' },     // 撕碎的點名簿一頁拼回原樣（畫面判斷）
+  R3: { diff: 7, kind: 'dupname' },   // 諾克斯的錄音：被念了兩次的名字
+  R4: { diff: 8, kind: 'event' },     // 大釜浮出的材料順序（畫面判斷）
 };
 export const SELF_RESCUE = {
-  S1: { diff: 9, kind: 'vigenere' },  // 金鑰＝自己學院的英文名
+  S1: { diff: 9, kind: 'vigenere' },  // 鎖鏈上的密文；金鑰＝自己學院的英文名
   S2: { diff: 10, kind: 'direction', rounds: 3 },
-  S3: { diff: 9, kind: 'event' },     // 符文數獨（畫面判斷）
-  S4: { diff: 10, kind: 'liar' },
+  S3: { diff: 9, kind: 'event' },     // 符文數獨（畫面判斷；第二章新題，斜線拼出 UNSEAL）
+  S4: { diff: 10, kind: 'liar' },    // 三個蝕化學生，只有一個說真話
 };
 
 // P29 屋頂的石板（第 0 排在北邊＝終點，第 5 排在南邊＝起點）。畫面用同一份（game/src/data/act4-ch1.mjs 的 ROOF，測試會比對）

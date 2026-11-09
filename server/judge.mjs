@@ -130,9 +130,20 @@ export function simulateLevers(def, pulls) {
 }
 
 // ---------- 救援題、自救題的內容 ----------
-const COUNTER = { fire: 'water', wind: 'fire', earth: 'wind', water: 'earth' }; // 被誰剋：水剋火、火剋風、風剋土、土剋水
-const FREE_WORDS = ['FREE', 'LIGHT', 'AWAKE', 'BREAK'];
-const VIG_WORDS = ['SOLVE VINCULA', 'LUX MANET', 'NON SUM TUUS', 'REDEO'];
+// 第二章（魔藥與點名簿）：R1 黑根上的藥草 → 解藥鍋裡剋制它的材料（牆上的對照表，畫面 game/src/ui/puzzles.mjs 也有一份）
+export const HERB_CURE = { nightshade: 'silver', wolfsbane: 'moonwort', hemlock: 'mandrake', blackroot: 'batwing' };
+const COUNTER = HERB_CURE;
+// R3：諾克斯的錄音念的名字（點名簿上的拼音）；其中一個被念了兩次
+const ROLL_NAMES = ['Harold', 'Ingrid', 'Darcy', 'Edith', 'Simon', 'Clara', 'Felix', 'Esme', 'Oswin', 'Rowan', 'Hector', 'Silas', 'Tobias', 'Yvette', 'Mabel', 'Quinn'];
+const VIG_WORDS = ['NOMEN DELETUM', 'LIBERA ME', 'NON ADSUM', 'REDEO'];
+// R3 的名單：從亂數抽 7 個不同的名字，再把其中一個插回去（念兩次）
+function rollRecording(r) {
+  const pool = [...ROLL_NAMES], list = [];
+  for (let i = 0; i < 7; i++) list.push(pool.splice(Math.floor(r() * pool.length), 1)[0]);
+  const dup = list[Math.floor(r() * 5)], at = list.indexOf(dup) + 2 + Math.floor(r() * (7 - list.indexOf(dup) - 1));
+  list.splice(at, 0, dup);
+  return { list, dup };
+}
 const LIARS = [ // 三顆頭（左、中、右）各說一句話，只有一顆說真話；root＝要切斷的黑根（每題都驗證過只有一個解，見 tools/test/judge.test.mjs）
   { says: ['not_left', 'right_is_root', 'middle_lies'], root: 'left' },
   { says: ['middle_is_root', 'left_lies', 'not_right'], root: 'right' },
@@ -147,7 +158,7 @@ export function rescueContent(pid, seed, key, { house } = {}) {
   const r = rng(seed, `${pid}:${key}`);
   switch (pid) {
     case 'R1': return { roots: Array.from({ length: 4 }, () => pick(r, Object.keys(COUNTER))) };
-    case 'R3': return { cipher: shiftWord(pick(r, FREE_WORDS), HOUSE_HOUR[house] ?? 0) };
+    case 'R3': return { names: rollRecording(r).list };
     case 'S1': return { cipher: vigenere(pick(r, VIG_WORDS), HOUSE_EN[house] ?? 'MILNER') };
     case 'S2': return { rounds: Array.from({ length: 3 }, () => Math.floor(r() * 8) * 45) }; // 聲音的方向（度）
     case 'S4': return { says: pick(r, LIARS).says };
@@ -158,7 +169,7 @@ export function rescueAnswer(pid, seed, key) {
   const r = rng(seed, `${pid}:${key}`);
   switch (pid) {
     case 'R1': return Array.from({ length: 4 }, () => COUNTER[pick(r, Object.keys(COUNTER))]).join(',');
-    case 'R3': return pick(r, FREE_WORDS);
+    case 'R3': return rollRecording(r).dup;
     case 'S1': return pick(r, VIG_WORDS);
     case 'S2': return Array.from({ length: 3 }, () => Math.floor(r() * 8) * 45).join(',');
     case 'S4': return pick(r, LIARS).root;
@@ -282,7 +293,7 @@ export function judge(pid, value, ctx) {
       me.at = [c, r]; me.i++;
       return { ok: true, solved: r === 0, reply: { step: me.i } };
     }
-    case 'counter': case 'caesar': case 'vigenere': case 'direction': case 'liar': {
+    case 'counter': case 'dupname': case 'vigenere': case 'direction': case 'liar': {
       const want = rescueAnswer(pid, ctx.seed, ctx.key);
       const ok = def.kind === 'counter' || def.kind === 'direction' ? normSeq(want) === normSeq(value) : norm(want) === norm(value);
       return { ok: true, solved: ok };
