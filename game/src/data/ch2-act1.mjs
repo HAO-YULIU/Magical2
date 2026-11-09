@@ -152,7 +152,7 @@ CH2_THINGS.push(...A2.map((x) => ({ hidden: true, ...x })));
 
 // ================= 第三幕：典禮廳・萬聖晚宴（A）、校長倒下之後（B） =================
 // 典禮廳沿用第一章（x -34～-10、z 102～148），長桌第 1～3 張各放兩壺南瓜汁（壺 1、2 在第 1 桌……）
-export const JUGS = [1, 2, 3, 4, 5, 6].map((k) => { const tb = Math.ceil(k / 2); return { k, tb, x: -30 + (tb - 1) * 5.5, z: k % 2 ? 118 : 132 }; });
+export const JUGS = [1, 2, 3, 4, 5, 6].map((k) => { const tb = Math.ceil(k / 2); return { k, tb, x: -30 + (tb - 1) * 5.5 + 0.55, z: k % 2 ? 118 : 132 }; }); // 放在桌子靠外側的邊上（不然按 E 會選到長桌）
 export const FIRSTYEARS = [[-27.2, 112], [-21.7, 138], [-16.2, 116], [-27.2, 144], [-11.6, 108], [-16.2, 140], [-21.7, 106], [-32.6, 130]]; // 躲在桌子底下、柱子後面（6、7 號：Q17 指錯會蝕化）
 export const SIDE_DOOR = { x: -33.7, z: 105 };
 export const CHANDELIER_FAR = { x: -22, z: 145.5 };
