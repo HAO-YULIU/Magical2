@@ -193,7 +193,7 @@ const TEXT = {
     continue: '繼續上次的遊戲', cleared_ch1: '✔ 已通關第二章', to_menu: '回到選單',
     time_hm: '{h} 小時 {m} 分', time_m: '{m} 分',
     res_time: '用時', res_notes: '莉安娜的筆記', res_cyril: '西里爾的抉擇', res_cyril_show: '把父親的檔案告訴大家', res_cyril_hide: '撕掉那一頁', res_rescued: '救出的低年級生',
-    res_caught: '被守夜人抓到', res_hints: '看過的提示', res_retries: '第四幕重來',
+    res_caught: '被諾克斯抓到', res_hints: '看過的提示', res_retries: '第四幕重來',
     // ---- 第四幕 ----
     a4_clock: '結界關上前',
     a4_rest: '點名聲停了……諾克斯回蝕巢去了。趁現在！',
@@ -482,7 +482,7 @@ const TEXT = {
     continue: 'Continue your last game', cleared_ch1: '✔ Chapter Two cleared', to_menu: 'Back to menu',
     time_hm: '{h}h {m}m', time_m: '{m} min',
     res_time: 'Time', res_notes: 'Liana’s notes', res_cyril: 'Cyril’s choice', res_cyril_show: 'Told everyone about his father’s file', res_cyril_hide: 'Tore out the page', res_rescued: 'First-years rescued',
-    res_caught: 'Caught by the Warden', res_hints: 'Hints used', res_retries: 'Act Four restarts',
+    res_caught: 'Caught by Knox', res_hints: 'Hints used', res_retries: 'Act Four restarts',
     // ---- Act 4 ----
     a4_clock: 'Barrier closes in',
     a4_rest: 'The roll call falls silent… Knox has gone back to the nest. Now’s your chance!',
