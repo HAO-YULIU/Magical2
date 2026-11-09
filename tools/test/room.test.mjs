@@ -1,6 +1,6 @@
 // 房間的整合測試：在本機啟動真正的 Worker＋Durable Object（wrangler），用 WebSocket 模擬玩家。
 // 登入用 DEV_AUTH 的假帳號（dev-名字）。
-import { runePuzzle } from '../../server/judge.mjs';
+import { runePuzzle, struckWord } from '../../server/judge.mjs';
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { unstable_dev } from 'wrangler';
@@ -236,25 +236,25 @@ test('製作人的測試登入：密碼對才能用，可以跳段', async () =>
   ws.close();
 });
 
-test('第四幕單人：倒數、齒輪多 90 秒、被抓到復活 3 次、用完判定輸、重來', async () => {
-  const code = await create('守夜人', 'solo');
-  const p = await player(code, '守夜人');
+test('第四幕單人：倒數、配方鎖多 60 秒、被抓到復活 3 次、用完判定輸、重來、徽記台', async () => {
+  const code = await create('諾克斯', 'solo');
+  const p = await player(code, '諾克斯');
   await p.request({ t: 'char', char: 'vaughn' }); await p.request({ t: 'ready', ready: true }); await p.request({ t: 'start' });
   await p.request({ t: 'dev', segment: 'act4' });
   let s = await p.wait((m) => m.t === 'state' && m.segment === 'act4');
   const left = s.act4.deadline - s.now;
-  assert.ok(left > 34.9 * 60000 && left <= 35 * 60000, `剩 ${left}`);
+  assert.ok(left > 29.9 * 60000 && left <= 30 * 60000, `剩 ${left}`);
   assert.equal(s.revives, 3);
   const ans = (pid, value) => p.request({ t: 'answer', pid, value });
-  assert.equal((await ans('P26', ['A'])).solved, false);
+  assert.equal((await ans('Q23', 'mandrake,shriek,serpent')).solved, false);
   await sleep(3100); // 答錯要等 3 秒
-  assert.equal((await ans('P26', ['C', 'D'])).solved, true);
-  assert.equal((await ans('P27', '12,24,18,36')).solved, true);
+  assert.equal((await ans('Q23', 'mandrake,shriek,serpent,blackroot')).solved, true);
   s = await p.wait((m) => m.t === 'state' && m.act4?.bonus);
-  assert.ok(s.act4.deadline - s.now > 36 * 60000); // 多了 90 秒
-  assert.equal((await ans('P32', '4162')).solved, true); // 稻草人的工具箱：再多 60 秒
-  s = await p.wait((m) => m.t === 'state' && m.act4 && m.act4.deadline - m.now > 37 * 60000);
-  // 貝爾蒙特擊退守夜人：冷卻 60 秒
+  assert.ok(s.act4.deadline - s.now > 30.5 * 60000); // 多了 60 秒
+  // 點名：只有算諾克斯的人（sim）能點
+  assert.equal((await p.request({ t: 'rollcall', uid: p.uid })).t, 'ok');
+  assert.equal((await p.wait((m) => m.t === 'rollcall')).uid, p.uid);
+  // 貝爾蒙特擊退：冷卻 60 秒
   assert.equal((await p.request({ t: 'repel' })).t, 'ok');
   assert.equal((await p.request({ t: 'repel' })).error, 'cooldown');
   // 被抓到：掙脫成功不算；沒掙脫用掉一次復活
@@ -263,7 +263,6 @@ test('第四幕單人：倒數、齒輪多 90 秒、被抓到復活 3 次、用�
   assert.equal((await p.request({ t: 'escape' })).escaped, true);
   await sleep(10); await p.request({ t: 'catch', uid: p.uid });
   assert.equal((await p.request({ t: 'escape' })).escaped, true); // 第二次掙脫
-  // 掙脫兩次之後：再被抓就掙脫不了（2026-10-31 製作人）
   await sleep(10); await p.request({ t: 'catch', uid: p.uid });
   assert.equal((await p.request({ t: 'escape' })).escaped, false);
   assert.equal((await p.wait((m) => m.t === 'revived')).left, 2);
@@ -275,20 +274,27 @@ test('第四幕單人：倒數、齒輪多 90 秒、被抓到復活 3 次、用�
   }
   await p.request({ t: 'catch', uid: p.uid }); await p.request({ t: 'caught' });
   assert.equal((await p.wait((m) => m.t === 'lost')).reason, 'revives');
-  assert.equal((await ans('P28', 'LSSLLSL')).error, 'lost');
+  assert.equal((await ans('Q25', '8,11,9,3')).error, 'lost');
+  assert.equal((await p.request({ t: 'crest', house: 'eldrin' })).error, 'not_now');
   assert.equal((await p.request({ t: 'retry' })).t, 'ok');
-  s = await p.wait((m) => m.t === 'state' && m.act4 && !m.act4.lost && !m.solved.includes('P26')); // 第四幕的進度清掉
+  s = await p.wait((m) => m.t === 'state' && m.act4 && !m.act4.lost && !m.solved.includes('Q23')); // 第四幕的進度清掉
   assert.equal(s.revives, 3);
   // 時間到：判定輸
   await p.request({ t: 'dev', deadline: 300 });
   assert.equal((await p.wait((m) => m.t === 'lost', 5000)).reason, 'time');
   await p.request({ t: 'retry' });
-  // 走完第四幕：P26、P28、屋頂 → 尾聲
-  assert.equal((await ans('P26', ['A', 'B'])).solved, true);
-  assert.equal((await ans('P28', 'LSSLLSL')).solved, true);
-  assert.ok((await ans('P29', { cell: [3, 3] })).reply.broke); // 第一步不能從中間開始
-  for (const cell of [[1, 5], [1, 4], [2, 4], [2, 3], [3, 3], [3, 2], [3, 1], [4, 1]]) assert.equal((await ans('P29', { cell })).reply.step > 0, true);
-  assert.equal((await ans('P29', { cell: [4, 0] })).solved, true);
+  // 走完第四幕：Q23～Q26，再點亮四個徽記台 → 尾聲
+  const { seed } = await p.request({ t: 'dev', seed: true });
+  assert.equal((await ans('Q23', 'mandrake,shriek,serpent,blackroot')).solved, true);
+  assert.deepEqual((await p.request({ t: 'peek', pid: 'Q24' })).content.names.map(([n, i]) => n[i]).join('').toUpperCase(), struckWord(seed));
+  assert.equal((await ans('Q24', struckWord(seed).toLowerCase())).solved, true);
+  assert.equal((await ans('Q26', '1,3,5')).error, 'not_now'); // 樓梯的開關在時鐘鎖後面
+  assert.equal((await ans('Q25', '8,11,9,3')).solved, true);
+  assert.equal((await ans('Q26', '2,3,4')).solved, true);
+  assert.equal((await ans('Q27', 'done')).error, 'not_now'); // 不能直接作答
+  for (const h of ['eldrin', 'grimoire', 'belmont']) assert.equal((await p.request({ t: 'crest', house: h })).solved, false);
+  assert.equal((await p.request({ t: 'crest', house: 'nope' })).error, 'bad_value');
+  assert.equal((await p.request({ t: 'crest', house: 'ouroboros' })).solved, true);
   assert.equal((await p.wait((m) => m.t === 'state' && m.segment === 'epilogue')).segment, 'epilogue');
   p.close();
 });
@@ -309,7 +315,7 @@ test('第四幕多人：被拖進蝕巢、同伴救援、自救、全員被抓�
   let s = await a.wait((m) => m.t === 'state' && m.nest?.[b.uid]);
   const q = s.nest[b.uid];
   assert.ok(['R1', 'R2', 'R3', 'R4'].includes(q.r) && ['S1', 'S2', 'S3', 'S4'].includes(q.s));
-  assert.equal((await b.request({ t: 'answer', pid: 'P26', value: ['A', 'B'] })).error, 'captured'); // 被綁著不能解題
+  assert.equal((await b.request({ t: 'answer', pid: 'Q23', value: 'mandrake,shriek,serpent,blackroot' })).error, 'captured'); // 被綁著不能解題
   const peek = await a.request({ t: 'peek', pid: 'R', target: b.uid });
   assert.equal(peek.pid, q.r);
   assert.equal((await b.request({ t: 'peek', pid: 'S' })).pid, q.s);
@@ -367,8 +373,9 @@ test('整章：單人從序幕玩到尾聲，存檔記下結果，可以回來�
   await seg('act4');
   // 第四幕：被抓一次（復活），然後逃出去
   await p.request({ t: 'catch', uid: p.uid }); await p.request({ t: 'caught' });
-  await ans('P26', ['A', 'B']); await ans('P28', 'LSSLLSL');
-  for (const cell of [[1, 5], [1, 4], [2, 4], [2, 3], [3, 3], [3, 2], [3, 1], [4, 1], [4, 0]]) await p.request({ t: 'answer', pid: 'P29', value: { cell } });
+  { const { seed } = await p.request({ t: 'dev', seed: true });
+    for (const [pid, v] of [['Q23', 'mandrake,shriek,serpent,blackroot'], ['Q24', struckWord(seed)], ['Q25', '8,11,9,3'], ['Q26', '1,3,5']]) await ans(pid, v); }
+  for (const h of ['eldrin', 'grimoire', 'belmont', 'ouroboros']) await p.request({ t: 'crest', house: h });
   const end = await seg('epilogue');
   assert.equal(end.result.notes, 2); assert.equal(end.result.cyril, 'tear'); assert.equal(end.result.rescued, 8); assert.equal(end.result.caught, 1); assert.ok(end.result.time > 0);
   await sleep(200);

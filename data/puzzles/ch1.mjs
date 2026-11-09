@@ -209,7 +209,8 @@ export const ROOF = [
   'ᛁᛗᛒᚹᛗᚺ',
 ];
 // 第四幕的倒數（docs/04-map-ch1.md）：35 分鐘；卡住齒輪（P27）多 90 秒，只有一次
-export const ACT4 = { duration: 35 * 60 * 1000, gearBonus: 90 * 1000, scareBonus: 60 * 1000, grab: 1500, repelCool: 60 * 1000, repelFor: 5000, selfSwap: 3 * 60 * 1000, escapes: 2 }; // escapes：每個人最多掙脫幾次（2026-10-31 製作人）
+export const ACT4 = { duration: 30 * 60 * 1000, gearBonus: 60 * 1000, // 第二章：倒數 30 分鐘（結界關上前）；地窖的配方鎖（Q23）多 60 秒
+   scareBonus: 60 * 1000, grab: 1500, repelCool: 60 * 1000, repelFor: 5000, selfSwap: 3 * 60 * 1000, escapes: 2 }; // escapes：每個人最多掙脫幾次（2026-10-31 製作人）
 
 // 學院的時辰（P03～P08、R3 用）
 export const HOUSE_HOUR = { eldrin: 8, grimoire: 11, belmont: 9, ouroboros: 3 };

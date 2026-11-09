@@ -144,10 +144,12 @@ export function createCh2Scene(scene, conn) {
   let aldricDead = false;
   const killAldric = () => { if (aldricDead) return; aldricDead = true; prints.visible = true; buildVictim(root, -22, 108.4, [0, 1], { seed: 91, model: 'aldric', robe: '#3a1a2a' }).catch(() => {}); bloodPool(root, -22, 108.6, 1.4, { seed: 92 }); };
   // 大廳東牆的大鐘（Q22：停在十二點）
+  let clockXIII = () => {};
   { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#e8dcc0'; g.beginPath(); g.arc(128, 128, 124, 0, 7); g.fill(); g.strokeStyle = '#3a2a18'; g.lineWidth = 8; g.stroke(); g.fillStyle = '#2a1e12'; g.font = '26px serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
     ['XII', 'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'].forEach((n, i) => { const a = (i / 12) * Math.PI * 2 - Math.PI / 2; g.fillText(n, 128 + Math.cos(a) * 98, 128 + Math.sin(a) * 98); });
     g.lineWidth = 7; g.beginPath(); g.moveTo(128, 128); g.lineTo(128, 50); g.stroke(); g.lineWidth = 5; g.beginPath(); g.moveTo(128, 128); g.lineTo(128, 70); g.stroke();
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    clockXIII = () => { g.fillStyle = 'rgba(140,10,10,0.75)'; g.font = 'italic 22px serif'; g.fillText('XIII', 128 + Math.cos(-Math.PI / 2 - 0.26) * 98, 128 + Math.sin(-Math.PI / 2 - 0.26) * 98 + 14); t.needsUpdate = true; }; // 尾聲最後一個畫面：XII 旁邊多出淡淡的 XIII
     const face = new THREE.Mesh(new THREE.CircleGeometry(1, 40), new THREE.MeshStandardMaterial({ map: t, roughness: 0.7 })); put(face, 9.76, 118, -Math.PI / 2, 3.2);
     const box = new THREE.Mesh(new THREE.BoxGeometry(0.3, 4.2, 2.4), new THREE.MeshStandardMaterial({ color: '#3a2618', roughness: 0.8 })); put(box, 9.95, 118, 0, 2.1); }
   // 大廳的地板：一圈 I～XII 的石磚（Q22）
@@ -172,6 +174,7 @@ export function createCh2Scene(scene, conn) {
     knockJug(k) { const j = jugs[k]; if (j) { j.rotation.z = Math.PI / 2; j.position.y = 0.85; } }, // Q17 打翻
     dropChandelier() { chand.position.y = 0.3; chand.rotation.z = 0.25; }, // Q18
     openSideDoor() { sd.visible = false; }, // Q19
+    clockXIII: () => clockXIII(), // 尾聲
     // 第一幕開始時：問伺服器溫室的異常（畫出來）
     async enterAct1() { if (fetched) return; fetched = true; const r = await conn.request({ t: 'peek', pid: 'Q06' }); if (r.t === 'peek') applyAnomalies(r.content.spots); },
   };

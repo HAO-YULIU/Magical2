@@ -557,3 +557,15 @@ body.bigtext #caption { font-size: 20px; } body.bigtext #toast { font-size: 18px
 .ch2-runes-drawn { text-align: center; font-size: 28px; letter-spacing: 6px; min-height: 36px; color: #e8d8ff; }
 .ch2-dial { position: relative; width: 220px; height: 220px; margin: 10px auto; border-radius: 50%; border: 2px solid #5a8a5a; background: radial-gradient(#1a2a1a, #0a120a); }
 .ch2-dial button { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; padding: 0; font-size: 14px; }
+/* 第二章第四幕 */
+.ch2-slots { display: flex; gap: 8px; justify-content: center; margin: 10px 0; }
+.ch2-slots div { width: 92px; height: 48px; border: 2px dashed #6a5a4a; border-radius: 6px; display: grid; place-items: center; color: #8a7a6a; font-size: 13px; text-align: center; }
+.ch2-slots div.full { border-style: solid; border-color: #b0a070; color: #f0e8c8; background: #2a2418; }
+.ch2-struck { font: 22px Georgia, serif; letter-spacing: 2px; color: #e8e0d0; margin: 8px 0 8px 24px; }
+.ch2-struck s { color: #e04040; text-decoration-thickness: 3px; text-decoration-color: #e04040; }
+.ch2-stairs { display: flex; flex-direction: column; gap: 6px; max-width: 240px; margin: 10px auto; }
+.ch2-stairs button { text-align: left; background: #15151c; color: #777; border: 1px solid #333; }
+.ch2-stairs button.lit { background: #4a3c14; color: #ffe8a0; border-color: #c0a040; box-shadow: 0 0 10px #c0a04066; }
+#a4call { position: fixed; top: 27%; left: 50%; transform: translateX(-50%); z-index: 60; padding: 12px 22px; max-width: 90vw; text-align: center;
+  font: bold 22px serif; color: #ffd0ff; background: rgba(30, 0, 30, 0.82); border: 2px solid #c8a0ff; border-radius: 8px; box-shadow: 0 0 30px #a040ff88; pointer-events: none; animation: a4call 0.6s ease-in-out infinite alternate; }
+@keyframes a4call { from { box-shadow: 0 0 12px #a040ff55; } to { box-shadow: 0 0 40px #c060ffcc; } }

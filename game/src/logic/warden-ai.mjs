@@ -95,6 +95,8 @@ export function createWardenAI({ rooms, doors, points, params: P, start, rand = 
       this.placeFar(players);
     },
     placeFar(players) { const best = farPoint(players); if (best) Object.assign(s, { x: best.x, z: best.z, zone: best.zone }); },
+    // 第二章：諾克斯點名。被點到的人 10 秒內被她看到，她馬上衝過去（不用先看 0.8 秒），而且跑得比較快
+    call(uid, until) { s.call = { uid, until }; },
     noise(p) { if (s.mode === 'patrol' || s.mode === 'search') { s.mode = 'search'; s.goal = { x: p.x, z: p.z, zone: p.zone }; s.wait = 0; } },
     // 每一幀；players：[{ uid, zone, x, z, moving, running, hidden, holding, captured }]；回傳事件
     update(dt, players, now) {
@@ -124,6 +126,8 @@ export function createWardenAI({ rooms, doors, points, params: P, start, rand = 
         s.near[p.uid] = close ? (s.near[p.uid] ?? 0) + dt : 0;
         if (s.near[p.uid] >= P.findHidden) { s.exposed.add(p.uid); s.mode = 'chase'; s.target = p.uid; out.push({ type: 'found', uid: p.uid }); }
       }
+      const calling = s.call && now < s.call.until ? players.find((p) => p.uid === s.call.uid) : null;
+      if (calling && s.mode !== 'chase' && visible(calling) && sees(calling, true)) { s.mode = 'chase'; s.target = calling.uid; s.lost = 0; s.seen = {}; out.push({ type: 'spotted', uid: calling.uid }); }
       if (s.mode !== 'chase') {
         // 看到 0.5 秒就發現
         for (const p of players) {
@@ -139,7 +143,8 @@ export function createWardenAI({ rooms, doors, points, params: P, start, rand = 
           if (d < (p.running ? P.hearRun : P.hearWalk)) { s.mode = 'search'; s.goal = { x: p.x, z: p.z, zone: p.zone }; s.wait = 0; }
         }
       }
-      const speed = (s.mode === 'chase' ? P.chase : P.patrol) * speedMul();
+      const called = s.mode === 'chase' && s.call && now < s.call.until && s.target === s.call.uid;
+      const speed = (s.mode === 'chase' ? P.chase * (called ? (P.callBoost ?? 1.15) : 1) : P.patrol) * speedMul();
       if (s.mode === 'chase') {
         const p = players.find((x) => x.uid === s.target);
         if (!p || p.captured) { s.mode = 'patrol'; s.target = null; return out; }

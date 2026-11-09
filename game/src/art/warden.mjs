@@ -4,6 +4,8 @@
 //   - 帳號一的 frame(dt, mode) 裡呼叫 group.userData.update?.(dt, mode) 時，照 AI 的狀態（idle／patrol／search／chase／grab／stun）。
 //   - 沒有呼叫時，自己每一格看移動速度選走路或跑步（不知道撲抓的時機）。
 import * as THREE from 'three';
+import { loadCharacter } from './characters.mjs';
+import { erode } from './ch2/erode.mjs';
 import { GLTFLoader } from '../../../prototype/vendor/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from '../../../prototype/vendor/addons/libs/meshopt_decoder.module.js';
 import { decorators } from '../world/art-hooks.mjs';
@@ -157,9 +159,22 @@ function corrupt(model, root) {
   return hinges;
 }
 
+// 第二章（2026-11-09）：追人的換成蝕化的諾克斯教授（knox.glb＋蝕化效果：灰白皮膚、黑色血管、全黑的眼睛；嘴角裂開的血）
+async function loadKnoxEroded() {
+  const c = await loadCharacter('knox'); erode(c.root, 1);
+  let head = null; c.root.traverse((o) => { if (!head && o.isBone && /Head$/i.test(o.name)) head = o; });
+  if (head) { // 嘴角一路裂到耳朵：一道暗紅的口子
+    const gash = new THREE.Mesh(new THREE.TorusGeometry(0.06, 0.008, 6, 16, Math.PI), new THREE.MeshStandardMaterial({ color: '#3a0204', roughness: 0.2, emissive: '#200000' }));
+    gash.rotation.x = Math.PI; gash.position.set(0, 0.03, 0.09); head.add(gash);
+  }
+  const SPEED = { idle: 0, stun: 0, rest: 1.0, patrol: 1.2, search: 1.2, chase: 3.2, grab: 0 };
+  let cur = 'idle';
+  return { root: c.root, play: (anim) => { cur = anim; }, update: (dt, mode) => { c.setMoving?.(SPEED[mode] ?? 1.2); c.update?.(dt, null); } };
+}
+
 decorators.npc.push(({ key, group }) => {
   if (key !== 'warden') return;
-  loadWardenModel().then((w) => {
+  loadKnoxEroded().then((w) => {
     group.traverse((c) => { if (c.isMesh) c.visible = false; }); // 灰盒（含肋骨那一組）藏起來，燈光留著
     group.add(w.root);
     let told = false, last = null, speed = 0;

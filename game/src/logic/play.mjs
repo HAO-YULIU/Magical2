@@ -77,14 +77,14 @@ export function startPlay({ conn, getState, myUid, toast, dev, devUser }) {
   const mirrors = createMirrors(world.scene); // 交誼廳的古鏡（哈氣浮出反字）
   // 第一章的最後一幕（尾聲講完）：宿舍的燈突然全滅，自己房間的古鏡起霧、從裡面寫出一行字；講完才出現「第一章完」
   let inFinale = false;
+  // 第二章的最後一幕（尾聲講完）：燈滅，再亮起來時站在大廳的大鐘前面——鐘面上 XII 的旁邊，多出了一個淡淡的 XIII
   function finale(done) {
     inFinale = true;
-    const m = MIRRORS.find((q) => q.house === myHouse()) ?? MIRRORS[0];
     world.setDark(true); sfx('slam'); buzz([160, 60, 90]);
-    world.teleport({ x: m.x, z: m.z + m.face * 1.6, yaw: m.face > 0 ? 0 : Math.PI }); // 黑暗裡，你已經站在鏡子前面
+    world.teleport({ x: 6.4, z: 118, yaw: -Math.PI / 2 });
     setTimeout(() => {
-      mirrors.scrawl('mirror_' + m.house, L(FINALE_MIRROR)); sfx('whisper'); say(SCRIPT.finale);
-      const wait = setInterval(() => { if (!talking()) { clearInterval(wait); setTimeout(() => { world.setDark(false); inFinale = false; done(); }, 2500); } }, 500);
+      world.setDark(false); ch2scene.clockXIII(); sfx('chime'); say(SCRIPT.finale);
+      const wait = setInterval(() => { if (!talking()) { clearInterval(wait); setTimeout(() => { inFinale = false; done(); }, 2500); } }, 500);
     }, 1800);
   }
   const act3 = createAct3({ world, conn, toast, say, S, myChar: () => me()?.char, solvedByMe: (pid, r) => { onSolved(pid, myUid, r.reveal); toast(t('solved', { pid })); }, serverNow: () => Date.now() + clockOffset });

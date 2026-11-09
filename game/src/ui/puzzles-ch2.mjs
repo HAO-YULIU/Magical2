@@ -218,4 +218,66 @@ export const BUILD_CH2 = {
       face, el('div', { class: 'row' }, el('button', { text: '◀', onclick: () => set(-1) }), el('button', { text: '▶', onclick: () => set(1) }), el('button', { class: 'primary small', text: T('就停在這裡', 'Stop it here'), onclick: () => submit(String(h)) })));
   },
 
+  // ---------- 第四幕 ----------
+  // Q23：地窖鐵門的配方鎖——四個凹槽，依序放材料瓶
+  Q23(body, { submit }) {
+    const ING = [['moonwort', '☽', T('月光草', 'Moonwort')], ['serpent', '🐍', T('啞蛇的鱗', 'Mute serpent scale')], ['blackroot', '❧', T('黑根的汁', 'Black-root sap')], ['batwing', '🦇', T('蝙蝠翅', 'Bat wing')],
+      ['mandrake', '❦', T('曼德拉草', 'Mandrake')], ['silver', '✧', T('銀粉', 'Silver dust')], ['shriek', '🍄', T('尖叫蘑菇', 'Shrieking mushroom')]];
+    const put = []; const slots = el('div', { class: 'ch2-slots' });
+    const paint = () => { slots.innerHTML = ''; for (let i = 0; i < 4; i++) { const g = ING.find((x) => x[0] === put[i]); slots.append(el('div', { class: g ? 'full' : '', text: g ? `${g[1]} ${g[2]}` : String(i + 1) })); } };
+    paint();
+    body.append(el('p', { class: 'dim', text: T('鐵門上有四個凹槽，旁邊一排材料瓶。門上刻著：「先做讓人看不見的，再做讓人醒來的。」', 'Four hollows are cut into the iron door; a row of ingredient jars stands beside it. Carved above: “First what makes you unseen, then what makes you wake.”') }),
+      slots, el('div', { class: 'row wrap' }, ...ING.map(([id, s, name]) => el('button', { class: 'small', text: `${s} ${name}`, onclick: () => { if (put.length < 4) { put.push(id); paint(); sfx('click'); } } }))),
+      el('div', { class: 'row' }, el('button', { class: 'small', text: T('全部拿出來', 'Take them all out'), onclick: () => { put.length = 0; paint(); } }), answerBtn(() => submit(put.join(',')))));
+  },
+  // Q24：諾克斯桌上的點名簿副本——缺席名單，每個名字被劃掉一個字母（名單由伺服器給）
+  Q24(body, { conn }) {
+    const list = el('ol', { class: 'ch2-struck' });
+    conn.request({ t: 'peek', pid: 'Q24' }).then((r) => {
+      if (r.t !== 'peek') { list.append(el('li', { text: T('字跡糊掉了。', 'The ink has run.') })); return; }
+      for (const [name, at] of r.content.names) list.append(el('li', {}, ...[...name].map((ch, i) => (i === at ? el('s', { text: ch }) : document.createTextNode(ch)))));
+    });
+    body.append(el('p', { class: 'dim', text: T('點名簿的最後一頁：「今晚缺席」。名字都是用拼音寫的，每個名字上都有一道紅筆劃過。紙角寫著：「口令，給還醒著的孩子。」', 'The last page of the roll book: “Absent tonight.” Every name has a single red stroke through it. In the corner: “The password, for the children still awake.”') }), list,
+      el('p', { class: 'dim', text: T('（往宿舍塔樓的門要說口令。）', '(The door to the dormitory tower wants a password.)') }));
+  },
+  // Q24（門）：往宿舍塔樓的門——說出口令
+  towerdoor(body, { submit, state }) {
+    const inp = el('input', { maxlength: '8', placeholder: T('口令', 'Password'), class: 'num' });
+    inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') submit(inp.value.trim()); };
+    body.append(el('p', { class: 'dim', text: T('門後有小孩壓低聲音的哭聲。門上的銅牌：「說出口令。」', 'Behind the door, a child is crying quietly. A brass plate reads: “Speak the password.”') }),
+      ...(state.solved.includes('Q24') ? [] : [el('div', { class: 'row' }, inp, answerBtn(() => submit(inp.value.trim())))]));
+  },
+  // Q25：塔樓門上的時鐘鎖——依序轉到四個時間
+  Q25(body, { submit }) {
+    let h = 12; const seq = []; const face = el('div', { class: 'ch2-clock', text: '12' }); const show = el('p', { class: 'ch2-runes-drawn' });
+    const paint = () => { face.textContent = `${h}`; show.textContent = seq.join(' → ') || '—'; };
+    const set = (d) => { h = ((h - 1 + d + 12) % 12) + 1; paint(); sfx('click'); };
+    paint();
+    body.append(el('p', { class: 'dim', text: T('門上的鎖像一個時鐘，要轉四次，每次「喀」一聲記下來。門縫塞了赫爾嘉夫人的紙條：「我巡房的時間，從你們偷溜出去的那一晚開始算。」', 'The lock is shaped like a clock: turn it four times, clicking each one in. Madam Helga’s note is wedged in the door: “The times of my rounds — counted from the night you first sneaked out.”') }),
+      face, el('div', { class: 'row' }, el('button', { text: '◀', onclick: () => set(-1) }), el('button', { text: '▶', onclick: () => set(1) }),
+        el('button', { class: 'small', text: T('喀（記下）', 'Click (set)'), onclick: () => { if (seq.length < 4) { seq.push(h); paint(); sfx('click'); } } })),
+      show, el('div', { class: 'row' }, el('button', { class: 'small', text: T('歸零', 'Reset'), onclick: () => { seq.length = 0; paint(); } }), answerBtn(() => submit(seq.join(',')))));
+  },
+  // Q26：樓梯的五盞燈——按一層，那一層和上下相鄰的燈都會切換；全亮就送出
+  Q26(body, { submit, solved, state }) {
+    if (!state.solved.includes('Q25')) { body.append(el('p', { text: T('開關箱在樓梯門後面，門上掛著赫爾嘉夫人的時鐘鎖。', 'The switch box is behind the stair door, and Madam Helga’s clock lock hangs on it.') })); return; }
+    const on = [false, true, false, true, false]; let pressed = [0, 0, 0, 0, 0], sent = false; // 一開始第 2、4 層亮（題目本身）
+    const col = el('div', { class: 'ch2-stairs' }), info = el('p', { class: 'dim' });
+    const paint = () => {
+      col.innerHTML = '';
+      for (let i = 4; i >= 0; i--) col.append(el('button', { class: on[i] ? 'lit' : '', text: `${T('第', 'Floor ')}${i + 1}${T(' 層', '')}　${on[i] ? '💡' : '·'}`, onclick: () => press(i) }));
+      info.textContent = T(`按了 ${pressed.reduce((a, b) => a + b, 0)} 下`, `${pressed.reduce((a, b) => a + b, 0)} presses`);
+    };
+    const press = (i) => {
+      if (sent || solved) return;
+      for (const k of [i - 1, i, i + 1]) if (k >= 0 && k < 5) on[k] = !on[k];
+      pressed[i] ^= 1; sfx('click'); paint();
+      if (on.every(Boolean)) { sent = true; submit(pressed.map((v, k) => (v ? k + 1 : 0)).filter(Boolean).join(',')).then((r) => { if (!r?.solved) setTimeout(reset, 1200); }); }
+    };
+    const reset = () => { on.splice(0, 5, false, true, false, true, false); pressed = [0, 0, 0, 0, 0]; sent = false; paint(); };
+    paint();
+    body.append(el('p', { class: 'dim', text: T('五層樓梯各有一盞燈。按一層的開關，那一層和上下相鄰的燈都會切換。低年級生躲在頂樓，燈沒有全亮，他們不敢下來。', 'Each of the five landings has a lamp. A switch flips its own lamp and the ones directly above and below. The first-years hiding at the top won’t come down until every lamp is lit.') }),
+      col, info, el('button', { class: 'small', text: T('全部關回原樣', 'Put them back as they were'), onclick: reset }));
+  },
+
 };

@@ -1,11 +1,9 @@
 // 答案判斷的單元測試：每一題的正確答案要對、錯誤答案要錯
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { judge, hint, circledChar, greenSpots, SEATS, xrayPuzzle, juicePuzzle, runePuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
-import { ROOF as ROOF_GAME } from '../../game/src/data/act4-ch1.mjs';
-import { ROOF } from '../../data/puzzles/ch1.mjs';
+import { judge, hint, struckWord, circledChar, greenSpots, SEATS, xrayPuzzle, juicePuzzle, runePuzzle, simulateHourglass, corridorLoop, corridorFocus, rescueContent, PUZZLES, LIAR_SETS } from '../../server/judge.mjs';
 import { CHAPTER1 } from '../../data/puzzles/ch1.mjs';
-import { CHAPTER2 } from '../../data/puzzles/ch2.mjs';
+import { CHAPTER2, STRUCK } from '../../data/puzzles/ch2.mjs';
 
 const ctx = (o = {}) => ({ seed: 'test-seed', lang: 'zh', house: null, solo: true, state: {}, ...o });
 const ok = (pid, v, o) => judge(pid, v, ctx(o)).solved;
@@ -18,8 +16,9 @@ test('文字、順序、集合題', () => {
   assert.equal(ok('Q05', 'moonwort,batwing,silver'), true);
   assert.equal(ok('Q08', 'blackroot,thirteen,hername'), true);
   assert.equal(ok('Q09', '8:36'), true); assert.equal(ok('Q09', '836'), true); assert.equal(ok('Q09', '8:24'), false);
-  assert.equal(ok('P27', '12,24,18,36'), true);
-  assert.equal(ok('P28', 'LSSLLSL'), true);
+  // 第四幕
+  assert.equal(ok('Q23', 'mandrake,shriek,serpent,blackroot'), true); assert.equal(ok('Q23', 'mandrake,shriek,serpent'), false);
+  assert.equal(ok('Q25', '8,11,9,3'), true); assert.equal(ok('Q25', '8,9,11,3'), false);
 });
 
 test('第二章：點名簿的紅圈（Q04）、溫室的異常（Q06）由房間決定', () => {
@@ -45,11 +44,14 @@ test('沙漏：要剛好在沙漏漏完的那一刻敲第 15 分', () => {
   assert.deepEqual(simulateHourglass([7, 11], right).events, [7, 11, 15]);
 });
 
-test('拉桿：A＋B 或 C＋D', () => {
-  assert.equal(ok('P26', ['A', 'B']), true);
-  assert.equal(ok('P26', ['C', 'D']), true);
-  assert.equal(ok('P26', ['A']), false);
-  assert.equal(ok('P26', ['A', 'B', 'C', 'D']), false);
+test('第四幕：樓梯的燈（Q26）兩種按法都對；點名簿（Q24）被劃掉的字母拼出口令', () => {
+  assert.equal(ok('Q26', '1,3,5'), true); assert.equal(ok('Q26', '4,3,2'), true); assert.equal(ok('Q26', '1,3'), false);
+  // 燈謎本身：一開始 2、4 亮，按 1、3、5 或 2、3、4 會全亮
+  const press = (list) => { const on = [false, true, false, true, false]; for (const f of list) for (const k of [f - 2, f - 1, f]) if (k >= 0 && k < 5) on[k] = !on[k]; return on.every(Boolean); };
+  assert.equal(press([1, 3, 5]), true); assert.equal(press([2, 3, 4]), true); assert.equal(press([1, 2]), false);
+  for (const [word, names] of Object.entries(STRUCK)) assert.equal(names.map(([n, i]) => n[i]).join('').toUpperCase(), word);
+  const w = struckWord('test-seed');
+  assert.equal(ok('Q24', w.toLowerCase()), true); assert.equal(ok('Q24', 'XXXX'), false);
 });
 
 test('救援題、自救題：內容和答案一致', () => {
@@ -75,20 +77,6 @@ test('每一題（除了不計分的）都有三張中英文提示，難度比�
   const count = {}; for (const [, d] of scored) count[d.diff] = (count[d.diff] ?? 0) + 1;
   assert.deepEqual(count, { 6: 5, 7: 8, 8: 9, 9: 5, 10: 3 }); // docs/04-map-ch1.md 的難度分配＋2026-10-26 新增的 P30（7）、P31（8）、P32（7）
   assert.ok(Object.keys(PUZZLES).length >= 36);
-});
-
-test('P29 屋頂的符文路：一步一步踩，踩錯就碎掉', () => {
-  const state = {}, step = (c, r, uid = 'a') => judge('P29', { cell: [c, r] }, ctx({ state, uid }));
-  assert.deepEqual(ROOF_GAME, ROOF); // 畫面和伺服器用同一份石板
-  assert.equal(step(4, 4).reply.broke.join(), '4,4'); // 第一步要在最南邊那排
-  const path = [[1, 5], [1, 4], [2, 4], [2, 3], [3, 3], [3, 2], [3, 1], [4, 1], [4, 0]];
-  for (const [i, [c, r]] of path.entries()) {
-    const res = step(c, r);
-    assert.equal(!!res.reply.broke, false, `第 ${i + 1} 步`); assert.equal(res.solved, i === path.length - 1);
-  }
-  // 另一個人走自己的；拼錯字（M 之後踩 L）會碎掉
-  assert.equal(step(1, 5, 'b').solved, false); assert.ok(step(2, 5, 'b').reply.broke);
-  assert.equal(step(0, 0, 'b').reply.broke.join(), '0,0');
 });
 
 test('S4 說謊者題：每一組都只有一個解', () => {

@@ -98,6 +98,29 @@ export const CHAPTER2 = {
     hints: H(['歐文死前在鑰匙牌上刮了東西。', '刮痕只有一半，看看它在燈下的影子。', '是 1871 號抽屜。'],
              ['Before he died, Owen scratched something into the key tag.', 'The scratches are only half there — look at their shadow under the lamp.', 'Drawer 1871.']),
   },
+  // ---------- 第四幕：點名（30 分鐘倒數；諾克斯追殺） ----------
+  Q23: {
+    seg: 'act4', diff: 8, kind: 'seq', ans: 'mandrake,shriek,serpent,blackroot',
+    hints: H(['第一幕學過兩個配方。筆記本裡有。', '先做月影藥水，再做蝕化解藥。', '曼德拉草、尖叫蘑菇、啞蛇的鱗、黑根的汁。'],
+             ['You learned two recipes in Act One. They are in your journal.', 'First the Moonshade Draught, then the cure for the Blight.', 'Mandrake, shrieking mushroom, mute serpent scale, black-root sap.']),
+  },
+  Q24: {
+    seg: 'act4', diff: 8, kind: 'struck',
+    hints: H(['每個名字都被劃掉了一個字母。', '照名單的順序，把被劃掉的字母拼起來。', '前兩個字母是 {letters}。'],
+             ['Every name has one letter struck through.', 'In list order, put the struck letters together.', 'The first two letters are {letters}.']),
+  },
+  Q25: {
+    seg: 'act4', diff: 7, kind: 'seq', ans: '8,11,9,3',
+    hints: H(['夫人說的是她巡房的時間，第一章看過。', '她每晚巡四座塔，時間就是四個學院的時辰：艾爾德林、格里莫瓦、貝爾蒙特、烏洛波斯。', '8、11、9、3。'],
+             ['She means the times of her rounds — you saw them in chapter one.', 'Every night she visits the four towers; the times are the four houses’ hours: Eldrin, Grimoire, Belmont, Ouroboros.', '8, 11, 9, 3.']),
+  },
+  Q26: {
+    seg: 'act4', diff: 6, kind: 'lights', ans: ['1,3,5', '2,3,4'],
+    hints: H(['按一層會影響上下兩層。', '只要按三下。暗著的是第 1、3、5 層。', '按第 1、3、5 層。'],
+             ['Each switch also flips the floors above and below.', 'Only three presses. Floors 1, 3 and 5 are dark.', 'Press floors 1, 3 and 5.']),
+  },
+  Q27: { seg: 'act4', diff: 9, kind: 'event', hints: H(['四個台要同時亮。', '施咒之後，台會亮一陣子才熄。', '多人：每人各站一個，數一二三。單人：從最遠的開始，一個接一個點亮，跑最短的路線。'],
+             ['All four pedestals must be lit at once.', 'Once you cast, a pedestal stays lit for a little while.', 'Together: one each, count to three. Alone: start with the farthest and light them one after another along the shortest path.']) },
   C2: { seg: 'act2', diff: 0, score: false, kind: 'choice', options: ['tell', 'tear'] }, // 西里爾的第二個抉擇（告訴大家／撕掉那一頁）
   // ---------- 第三幕 A：萬聖晚宴（Q17 在遇襲前；遇襲後 15 分鐘倒數，時間到不算輸） ----------
   Q17: {
@@ -138,7 +161,7 @@ export const CH2_GATES = {
   act2: { need: ['Q10', 'Q11', 'Q12', 'Q13', 'Q14', 'Q15', 'Q16'], next: 'act3a' },
   act3b: { need: ['Q20', 'Q21', 'Q22'], next: 'act4' }, // 第二章沒有第三幕 C
 };
-export const CH2_SEG_END = { Q02: 'act1' };
+export const CH2_SEG_END = { Q02: 'act1', Q27: 'epilogue' };
 
 // Q19：符文與赫爾嘉夫人的描述（第一章的符文表）
 export const RUNE_DESC = [
@@ -147,3 +170,11 @@ export const RUNE_DESC = [
   ['tiwaz', 'ᛏ', H('像一支往上指的箭', 'like an arrow pointing up')], ['gebo', 'ᚷ', H('像一個大叉叉', 'like a big X')],
 ];
 export const FEAST = { duration: 15 * 60 * 1000, preAttack: 4 * 60 * 1000 }; // 遇襲後的倒數；晚宴開始多久沒動作就自動遇襲
+// Q24：諾克斯的缺席名單（每個名字劃掉一個字母，照順序拼出塔樓的口令）
+export const STRUCK = {
+  HIDE: [['Harold', 0], ['Ingrid', 0], ['Darcy', 0], ['Edith', 0]],
+  SAFE: [['Simon', 0], ['Clara', 2], ['Felix', 0], ['Esme', 0]],
+  DOOR: [['Darcy', 0], ['Oswin', 0], ['Rowan', 1], ['Hector', 5]],
+  STAY: [['Silas', 0], ['Tobias', 0], ['Clara', 2], ['Yvette', 0]],
+};
+export const CREST_LIT = { solo: 25000, multi: 10000 }; // Q27：徽記台亮多久（單人跑得比較遠，亮久一點）

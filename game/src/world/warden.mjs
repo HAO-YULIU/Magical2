@@ -32,9 +32,10 @@ export function createWarden(scene, { view = 12, fov = 60 } = {}) {
   // 綠色提燈（右手）：燈本身＋照出前方扇形的光
   const lamp = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.24, 8), new THREE.MeshBasicMaterial({ color: '#7dff9a' }));
   lamp.position.set(0.38, 1.1, -0.25); g.add(lamp);
-  const beam = new THREE.SpotLight('#5dff7a', 60, view, THREE.MathUtils.degToRad(fov / 2), 0.35, 1.2);
+  const beam = new THREE.SpotLight('#c8a0ff', 60, // 第二章：諾克斯的點名簿發出淡紫色的光（照到會被發現）
+    view, THREE.MathUtils.degToRad(fov / 2), 0.35, 1.2);
   beam.position.set(0.38, 1.2, -0.3); beam.target.position.set(0.3, 0, -6); g.add(beam, beam.target);
-  const glow = new THREE.PointLight('#5dff7a', 2, 4, 2); glow.position.copy(lamp.position); g.add(glow);
+  const glow = new THREE.PointLight('#c8a0ff', 2, 4, 2); glow.position.copy(lamp.position); g.add(glow);
   for (const fn of decorators.npc ?? []) fn({ key: 'warden', group: g, THREE });
 
   let t = 0;

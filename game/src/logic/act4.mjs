@@ -1,13 +1,12 @@
-// 第四幕的玩法：倒數（第十三響）、守夜人（追逐、躲藏、擊退）、被抓（掙脫、單人復活、多人拖進蝕巢＋救援／自救）、
-// 屋頂的符文石板（P29）、判定輸與重來、高潮與尾聲。謎題畫面在 ui/puzzles.mjs。
+// 第四幕的玩法（第二章：諾克斯點名）：倒數（結界關上前）、諾克斯（追逐、點名、躲藏、擊退）、被抓（掙脫、單人復活、多人拖進蝕巢＋救援／自救）、
+// 大門的四學院徽記台（Q27）、判定輸與重來、高潮與尾聲。謎題畫面在 ui/puzzles-ch2.mjs。
 import { createWarden } from '../world/warden.mjs';
 import { createAct4Scene } from '../world/act4scene.mjs';
-import { createScarecrow } from '../world/scarecrow.mjs';
 import { createWardenAI } from './warden-ai.mjs';
-import { A4_SPAWN, CHECKPOINTS, NEST_SPOT, NEST_EXIT, WARDEN, WARDEN_POINTS, WARDEN_START, ROOF_AT, roofCell } from '../data/act4-ch1.mjs';
+import { A4_SPAWN, CHECKPOINTS, NEST_SPOT, NEST_EXIT, WARDEN, WARDEN_POINTS, WARDEN_START } from '../data/act4-ch1.mjs';
 import { ROOMS, DOORS, SPAWNS } from '../data/world-ch1.mjs';
 import { SCRIPT } from '../data/story-ch1.mjs';
-import { playLullaby, playFile, scream, chime } from '../world/sound.mjs';
+import { playFile, scream, chime } from '../world/sound.mjs';
 import { sfx, setMusic, setTension, hasSound, setLoop } from '../art/sfx.mjs';
 import { openPanel, closePanel, panelOpen, el, L } from '../ui/overlay.mjs';
 import { openRescue } from '../ui/puzzles.mjs';
@@ -30,14 +29,12 @@ function summary(r) {
 export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar, receiver, serverNow, holding, solvedByMe, playScript, finale = (done) => done(), dev }) {
   const warden = createWarden(world.scene, { view: WARDEN.view, fov: WARDEN.fov });
   const scenery = createAct4Scene(world.scene);
-  const scarecrow = createScarecrow(world.scene); // P32
-  if (dev) window.__scarecrow = scarecrow; // 本機測試用
   const newAI = () => createWardenAI({ rooms: ROOMS, doors: DOORS, points: WARDEN_POINTS, params: WARDEN, start: WARDEN_START });
   let ai = newAI();
   let shown = { x: WARDEN_START.x, z: WARDEN_START.z, yaw: 0, mode: 'idle', zone: WARDEN_START.zone }, target = { ...shown };
   let active = false, introDone = false, startAt = 0, npcAt = 0, runFor = 0, tiredUntil = 0, humAt = 0;
-  let faceYaw = 0, lastMode = null;
-  let grabbed = null, roofAt = null, roofDirty = false, boundOpen = false, ending = null; // ending：'climax'（屋頂）→ 'epilogue'（宿舍）→ 結束畫面
+  let faceYaw = 0, lastMode = null, nextCall = performance.now() + 50000; // 第二章：下一次點名
+  let grabbed = null, boundOpen = false, ending = null; // ending：'climax'（大門）→ 'epilogue'（尾聲）→ 結束畫面
   const isSim = () => S().sim === myUid;
   const captured = () => !!S().nest?.[myUid];
 
@@ -55,7 +52,8 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
   const lost = el('div', { id: 'a4lost', hidden: true }, el('h2', { id: 'a4lost-title' }), el('p', { id: 'a4lost-text' }),
     el('button', { text: t('a4_retry'), onclick: () => conn.request({ t: 'retry' }) }));
   const warn = el('div', { id: 'a4warn', hidden: true, text: t('a4_danger') }); // 視窗上面的警告（提示框在視窗底下會被蓋住）
-  document.body.append(fight, bound, lost, warn);
+  const callBanner = el('div', { id: 'a4call', hidden: true }); // 第二章：「諾克斯：○○○——」
+  document.body.append(fight, bound, lost, warn, callBanner);
   // 被抓到：血噴在畫面上，慢慢淡掉（2026-11-04 加重血腥）
   const splash = el('div', { id: 'a4blood' }); document.body.append(splash);
   const bloodSplash = () => { splash.style.transition = 'none'; splash.style.opacity = '1'; splash.classList.toggle('flip'); void splash.offsetWidth; splash.style.transition = 'opacity 4s ease-in 2s'; splash.style.opacity = '0'; };
@@ -91,6 +89,9 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
   }
 
   // 判定輸：「你們被同化了」＋重來的按鈕（收到訊息時，或重新整理後從房間狀態看到）
+  const crestTimers = {};
+  function crestLit(house, until) { scenery.crest?.(house, true); clearTimeout(crestTimers[house]); crestTimers[house] = setTimeout(() => scenery.crest?.(house, false), Math.max(0, until - serverNow())); }
+
   function showLost(reason) {
     if (grabbed) { clearTimeout(grabbed); grabbed = null; fight.hidden = true; }
     closePanel(); lost.hidden = false;
@@ -100,7 +101,7 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
   }
 
   function begin(retry) {
-    active = true; introDone = false; ai = newAI(); roofAt = null; begunAt = performance.now();
+    active = true; introDone = false; ai = newAI(); begunAt = performance.now(); nextCall = performance.now() + 50000;
     if (boundOpen) { boundOpen = false; world.controls.setEnabled(true); } // 重來：被綁住的人也回到開頭
     if (retry) { if (S().nest) S().nest = {}; if (S().act4) S().act4.lost = null; } // 新的房間狀態馬上會到，先清掉，免得又被拉回蝕巢、又顯示判定輸
     shown = { ...shown, x: WARDEN_START.x, z: WARDEN_START.z, mode: 'idle', zone: WARDEN_START.zone }; target = { ...shown };
@@ -110,7 +111,6 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
     // 十二響，然後第十三響；守夜人哼著童謠從樓梯下來
     for (let i = 0; i < 13; i++) setTimeout(() => chime(false), i * 380);
     caption('cap.bells');
-    setTimeout(() => playLullaby({ lines: 1, volume: 0.3 }), 5600);
   }
 
   return {
@@ -122,7 +122,12 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
         if (active) { active = false; hud.hidden = true; wstate.hidden = true; setVeil(null, 0); document.body.classList.remove('a4danger'); warn.hidden = true; world.tired = false; setMusic(null); setLoop('hide_breath', 0); }
         if (ending === 'climax' && !talking()) { // 守夜人墜下屋頂之後：回到宿舍，播尾聲
           ending = 'epilogue'; warden.set({ visible: false }); world.setDark(false);
-          world.teleport(SPAWNS.prologue?.[CHARS[myChar()]?.house] ?? A4_SPAWN); playScript('segment:epilogue');
+          world.teleport({ x: 270, z: 20, yaw: -Math.PI / 2 }); playScript('segment:epilogue'); // 第二章：結界關上了，四人站在大門內
+          { const st = S(), lines = [...(SCRIPT[st.flags?.C2 === 'tell' ? 'epi:tell' : 'epi:tear'] ?? [])];
+            lines.push(...(SCRIPT[(st.feast?.rescued?.length ?? 0) >= 8 ? 'epi:rescued_all' : 'epi:rescued_some'] ?? []));
+            const drank = Object.entries(st.juice ?? {}).filter(([, v]) => v).map(([u]) => st.members.find((m) => m.uid === u)?.name).filter(Boolean);
+            if (drank.length) lines.push(...SCRIPT['epi:juice'].map(([w, zh, en]) => [w, zh.replace('{who}', drank.join('、')), en.replace('{who}', drank.join(', '))]));
+            say(lines); } // 尾聲的分支：西里爾的抉擇、救出幾個低年級生、誰喝了南瓜汁
         } else if (ending === 'epilogue' && !talking()) { // 尾聲講完：最後的演出（熄燈、鏡子），然後第一章結束
           ending = 'finale'; setMusic(null);
           finale(() => { ending = null; setMusic('menu');
@@ -135,8 +140,8 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
         }
         return 0;
       }
-      scenery.frame(dt, mine.z); scarecrow.update(dt, world.camera, world.roomOf(world.camera.position.x, world.camera.position.z)?.id, S().solved.includes('P32')); // 用鏡頭真正所在的房間（伺服器回來的 mine.z 會慢一點）
       const now = serverNow(), st = S();
+      scenery.frame(dt, mine.z, { lit: st.solved.includes('Q26'), close: 1 - Math.max(0, Math.min(1, ((st.act4?.deadline ?? now) - now) / 1800000)) });
       if (st.act4?.lost && lost.hidden) showLost(st.act4.lost); // 重新整理後也要看得到「重來」
       else if (!st.act4?.lost && !lost.hidden) lost.hidden = true;
       // 倒數
@@ -170,6 +175,12 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
           if (ev.type === 'catch') conn.request({ t: 'catch', uid: ev.uid }).then((r) => { if (r.t === 'error') ai.resolve(true, performance.now(), ps); });
           if (ev.type === 'spotted' && ev.uid === myUid) toast(t('a4_spotted'));
         }
+        // 第二章：點名。休息、還沒出來時不點；每 45～60 秒點一個還在外面的人
+        if (['patrol', 'search', 'chase'].includes(ai.state.mode) && performance.now() > nextCall) {
+          const cand = ps.filter((p) => !p.captured).flatMap((p) => (S().juice?.[p.uid] ? [p, p] : [p])); const pick = cand[Math.floor(Math.random() * cand.length)]; // 喝過南瓜汁的人比較常被點到
+          const [lo, hi] = WARDEN.rollEvery ?? [45, 60]; nextCall = performance.now() + (lo + Math.random() * (hi - lo)) * 1000;
+          if (pick) conn.request({ t: 'rollcall', uid: pick.uid });
+        }
         const w = ai.state; target = { x: w.x, z: w.z, yaw: w.yaw, mode: w.mode, zone: w.zone };
         shown = target;
         if (S().mode === 'multi' && performance.now() - npcAt > 120) { npcAt = performance.now(); conn.send({ t: 'npc', z: w.zone, w: [+w.x.toFixed(2), +w.z.toFixed(2), +w.yaw.toFixed(2)], m: w.mode }); }
@@ -195,25 +206,16 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
       // 配樂：守夜人越近越緊張；在追人時至少一半；被綁在蝕巢時只剩一點點
       if (!ending) setMusic('chase'); const near = Math.max(0, 1 - d / 22);
       setTension(me ? 0.12 : shown.mode === 'rest' ? 0.15 * near : shown.mode === 'chase' || shown.mode === 'grab' ? 0.5 + 0.5 * near : shown.mode === 'search' ? 0.25 + 0.5 * near : 0.6 * near);
-      if (d < 20 && performance.now() > humAt) { humAt = performance.now() + 16000; playLullaby({ lines: 1, volume: 0.06 + 0.25 * (1 - d / 20) }); }
-      // 屋頂的石板：踩到新的一塊就問伺服器
-      if (mine.z === 'a4_roof' && !st.solved.includes('P29') && !me) {
-        const cell = roofCell(mine.p[0], mine.p[1]);
-        const key = cell ? cell.join() : null;
-        if (key && key !== roofAt) {
-          roofAt = key; roofDirty = true;
-          conn.request({ t: 'answer', pid: 'P29', value: { cell } }).then((r) => {
-            if (r.reply?.broke) { // 石板碎了：掉下去，回到屋頂入口
-              chime(false); toast(t('a4_broke')); roofAt = null; roofDirty = false; scenery.crack(...cell); scenery.resetGlow();
-              world.teleport(CHECKPOINTS.a4_roof); conn.send({ t: 'noise', p: mine.p });
-            } else { scenery.glow(...cell); if (r.solved) solvedByMe('P29', r); }
-          });
-        } else if (!key && roofDirty && mine.p[1] > ROOF_AT.z0 + ROOF_AT.tile * 6) { roofDirty = false; roofAt = null; conn.request({ t: 'answer', pid: 'P29', value: { reset: true } }); scenery.resetGlow(); }
-      }
+      if (d < 20 && performance.now() > humAt) { humAt = performance.now() + 16000; sfx(d < 10 ? 'whisper' : 'paper'); } // 第二章：諾克斯靠近時聽得到翻點名簿、低聲念名字
       return h;
     },
     // 調查：蝕巢裡被綁住的同伴
     interact(tg) {
+      if (tg.kind === 'crest') { // 第二章 Q27：點亮學院徽記台
+        if (S().mode !== 'solo' && CHARS[myChar()]?.house !== tg.house && !(S().ai ?? []).includes(tg.house)) { toast(t('a4_crest_not_yours')); return true; }
+        conn.request({ t: 'crest', house: tg.house }).then((r) => { if (r.t === 'error') toast(t('wrong')); else if (!r.solved) toast(t('a4_crest_lit', { n: r.lit?.length ?? 1 })); });
+        return true;
+      }
       if (tg.kind !== 'nest') return false;
       const list = Object.keys(S().nest ?? {}).filter((u) => u !== myUid);
       if (!list.length) { toast(t('a4_nest_empty')); return true; }
@@ -246,16 +248,24 @@ export function createAct4({ world, conn, toast, say, talking, S, myUid, myChar,
         case 'freed': if (msg.uid !== myUid) toast(t('a4_freed_other', { name: S().members.find((m) => m.uid === msg.uid)?.name ?? '?' })); break;
         case 'repel': if (isSim()) ai.stun(WARDEN.repel, now); toast(t('a4_repelled')); $('flash')?.classList.add('on'); setTimeout(() => $('flash')?.classList.remove('on'), 300); break;
         case 'noise': if (isSim()) { const p = S().members.find((m) => m.uid === msg.uid); if (p && msg.p) ai.noise({ x: msg.p[0], z: msg.p[1], zone: msg.z }); } break;
+        case 'rollcall': { // 第二章：諾克斯點名
+          if (isSim()) ai.call(msg.uid, now + 10000);
+          const name = S().members.find((m) => m.uid === msg.uid)?.name ?? '?';
+          if (msg.uid === myUid) { callBanner.textContent = t('a4_call_me', { name }); callBanner.hidden = false; setTimeout(() => { callBanner.hidden = true; }, 10000); sfx('stinger'); navigator.vibrate?.([300, 100, 300]); }
+          else toast(t('a4_call_other', { name }));
+          break;
+        }
+        case 'crest': crestLit(msg.house, msg.until); break;
         case 'lost': showLost(msg.reason); break;
         case 'retry': begin(true); break;
       }
     },
-    // 尾聲：先在屋頂演完高潮（月光下的守夜人），再回宿舍。伺服器的段落可能比 P29 的回覆先到，所以在這裡排順序
+    // 尾聲：先在大門演完高潮（艾洛拉燒掉點名簿），再播尾聲
     end() {
       active = false; ending = 'climax'; hud.hidden = true; wstate.hidden = true; setMusic(null); setLoop('hide_breath', 0); setVeil(null, 0); ai.stun(9999, performance.now());
-      if (world.zone() !== 'a4_roof') world.teleport({ x: 155, z: -42, yaw: 0 });
-      warden.set({ x: 155, z: -52, yaw: Math.PI, visible: true, mode: 'stun' }); // 屋頂盡頭，月光下
-      playScript('solved:P29'); playScript(myChar() === 'cyril' ? 'P29:cyril' : 'P29:others');
+      world.teleport({ x: 268, z: 20, yaw: Math.PI / 2 }); // 第二章：大門前庭，背對著正在關上的結界
+      warden.set({ x: 262.5, z: 20, yaw: -Math.PI / 2, visible: true, mode: 'stun' }); // 諾克斯追到最後
+      playScript('climax');
     },
     dev: dev ? { warden: () => shown } : null,
   };

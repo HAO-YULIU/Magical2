@@ -102,6 +102,11 @@ const STYLE = {
   a4_pass: { wall: () => T.stoneWall('#3a3832'), wainscot: 0 },
   a4_gears: { wall: () => T.stoneWall('#4a443a'), wainscot: 0 },
   a4_nest: { wall: () => T.stoneWall('#2a1416'), wainscot: 0 },
+  // 第二章第四幕：地窖、儲藏室、宿舍塔樓、大門前庭
+  a4_cellar: { wall: () => T.stoneWall('#3e3830'), wainscot: 0 },
+  a4_store: { wall: () => T.stoneWall('#3a3a32'), wainscot: 0 },
+  a4_tower: { paper: ['#24182a', '#5a4a6a'], wainscot: 1.2 },
+  a4_gate: { wall: () => T.stoneWall('#4a4a52'), wainscot: 0 },
 };
 
 // 牆面內側的貼面（每個房間自己那一面，避開門）

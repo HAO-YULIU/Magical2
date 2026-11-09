@@ -1,10 +1,10 @@
 // 判斷答案（只在伺服器執行）。題目資料見 data/puzzles/ch1.mjs。
 // 隨機的題目（P09、P21、救援題、自救題）用房間的亂數種子決定，同一個房間每次結果一樣，不同房間不同。
 import { CHAPTER1, RESCUE, SELF_RESCUE, HOUSE_HOUR, BOOK_CIPHER, BRAILLE_DOOR, ROOF } from '../data/puzzles/ch1.mjs';
-import { CHAPTER2, SEATS, GREEN_SPOTS, RUNE_DESC } from '../data/puzzles/ch2.mjs';
+import { CHAPTER2, SEATS, GREEN_SPOTS, RUNE_DESC, STRUCK } from '../data/puzzles/ch2.mjs';
 
 // 第二章（2026-11-05 起）：序幕、第一幕用第二章的題目（Q01～Q09）；第二幕以後暫時還是第一章的題目，之後一段一段換掉
-const CH1_LATER = Object.fromEntries(Object.entries(CHAPTER1).filter(([, d]) => !['prologue', 'act1', 'act2', 'act3a', 'act3b', 'act3c'].includes(d.seg)));
+const CH1_LATER = {}; // 第二章：第一章的題目全部換掉了（救援題、自救題還沿用）
 export const PUZZLES = { ...CHAPTER2, ...CH1_LATER, ...RESCUE, ...SELF_RESCUE };
 export { SEATS, GREEN_SPOTS };
 const CH2_CHARS = ['elora', 'yuexi', 'vaughn', 'cyril'];
@@ -33,6 +33,8 @@ export function juicePuzzle(seed) {
   const cups = [1, 2, 3].map((tb) => (tb === Math.ceil(drugged / 2) ? 11 + Math.floor(r() * 3) : 4 + Math.floor(r() * 5)));
   return { drugged, other, helga, cups };
 }
+// Q24：缺席名單的口令（四個字選一個）
+export const struckWord = (seed) => Object.keys(STRUCK)[Math.floor(rng(seed, 'Q24')() * 4)];
 // Q19：四個符文（不重複）
 export function runePuzzle(seed) { const r = rng(seed, 'Q19'), left = RUNE_DESC.map((x) => x[0]), out = []; while (out.length < 4) out.push(left.splice(Math.floor(r() * left.length), 1)[0]); return out; }
 // Q06：溫室裡被動過手腳的三個地方
@@ -195,6 +197,8 @@ export function judge(pid, value, ctx) {
     case 'event': return { ok: true, solved: true };
     case 'rollcircle': { const c = circledChar(ctx.seed, ctx.chars); return { ok: true, solved: norm(value) === norm(SEATS[c]) || +value === +SEATS[c] }; }
     case 'xray': { const x = xrayPuzzle(ctx.seed); const got = asList(value).map(Number).sort((a, b) => a - b).join(','); return { ok: true, solved: !!x && got === x.ans.join(',') }; }
+    case 'struck': return { ok: true, solved: norm(value) === struckWord(ctx.seed) };
+    case 'lights': { const got = (Array.isArray(value) ? value : String(value ?? '').split(/[,，、\s]+/)).filter((x) => x !== '').map(Number).sort((a, b) => a - b).join(','); return { ok: true, solved: def.ans.includes(got) }; }
     case 'jug': return { ok: true, solved: +value === juicePuzzle(ctx.seed).drugged };
     case 'runes': return { ok: true, solved: asList(value).map((v) => String(v).trim().toLowerCase()).join(',') === runePuzzle(ctx.seed).join(',') };
     case 'spots': { const want = greenSpots(ctx.seed).sort().join(','); const got = asList(value).map(String).sort().join(','); return { ok: true, solved: got === want }; }
@@ -313,5 +317,6 @@ export function hint(pid, n, lang, ctx = {}) {
   if (pid === 'Q13' && ctx.cells) text = text.replace('{cells}', ctx.cells);
   if (pid === 'Q17' && ctx.jug) text = text.replace('{jug}', ctx.jug);
   if (pid === 'Q19' && ctx.runes) text = text.replace('{runes}', ctx.runes);
+  if (pid === 'Q24' && ctx.letters) text = text.replace('{letters}', ctx.letters);
   return text;
 }
